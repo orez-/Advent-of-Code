@@ -34,6 +34,6 @@ def part2(line):
 
 if __name__ == '__main__':
     with open('input.txt', 'r') as file:
-        line = next(iter(file)).strip()
+        line = next(file).strip()
         print(part1(line))
         print(part2(line))
