@@ -56,6 +56,7 @@ def part2(num):
 
 def generate_map():
     # this sure didn't pan out
+    nums = itertools.count(2)
     dumb = [[1]]
     while True:
         next_chunk = list(itertools.islice(nums, len(dumb[0])))
