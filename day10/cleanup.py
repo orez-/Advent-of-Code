@@ -4,7 +4,7 @@ import re
 
 
 def get_numbers(line):
-    return (float(match[0]) for match in re.finditer(r"-?(\d*\.\d+|\d+)", line))
+    return (int(match[0]) for match in re.finditer(r"-?(\d*\.\d+|\d+)", line))
 
 
 file = """
@@ -348,6 +348,7 @@ position=< 43754, -54319> velocity=<-4,  5>
 
 
 def print_board(stars):
+    stars = {(x, y) for x, y, *_ in stars}
     result = collections.deque()
     for sy in range(min(y for x, y in stars), max(y for x, y in stars) + 1):
         for sx in range(min(x for x, y in stars), max(x for x, y in stars) + 1):
@@ -357,19 +358,19 @@ def print_board(stars):
 
 
 def solve(file):
-    stars = {}
-    for line in file:
-        x, y, vx, vy = map(int, get_numbers(line))
-        stars[x, y] = (vx, vy)
+    stars = [
+        tuple(get_numbers(line))
+        for line in file
+    ]
 
     width = float('inf')
 
     for i in itertools.count(0):
         moved_stars = {
-            (x + vx, y + vy): (vx, vy)
-            for (x, y), (vx, vy) in stars.items()
+            (x + vx, y + vy, vx, vy)
+            for x, y, vx, vy in stars
         }
-        moved_width = max(x for x, y in moved_stars) - min(x for x, y in moved_stars)
+        moved_width = max(x for x, *_ in moved_stars) - min(x for x, *_ in moved_stars)
         if width < moved_width:
             print_board(stars)
             print(i)
