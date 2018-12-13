@@ -194,7 +194,7 @@ def part1(file):
         for x, elem in enumerate(row):
             if elem in '^>v<':
                 carts[y, x] = Cart(elem)
-        board.append(row.replace('>', '-').replace('<', '|').replace('^', '|').replace('v', '|'))
+        board.append(row.replace('>', '-').replace('<', '-').replace('^', '|').replace('v', '|'))
 
     while True:
         for (y, x), cart in sorted(carts.items()):
@@ -213,7 +213,7 @@ def part2(file):
         for x, elem in enumerate(row):
             if elem in '^>v<':
                 carts[y, x] = Cart(elem)
-        board.append(row.replace('>', '-').replace('<', '|').replace('^', '|').replace('v', '|'))
+        board.append(row.replace('>', '-').replace('<', '-').replace('^', '|').replace('v', '|'))
 
     while True:
         for (y, x), cart in sorted(carts.items()):
