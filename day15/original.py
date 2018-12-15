@@ -38,63 +38,74 @@ file = """
 """.strip().split('\n')
 
 
-# file = """
-# #########
-# #G......#
-# #.E.#...#
-# #..##..G#
-# #...##..#
-# #...#...#
-# #.G...G.#
-# #.....G.#
-# #########
-# """.strip().split('\n')
-# 30 * 38 = 1140
+def test_one():
+    test_file = """
+#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######
+    """.strip().split('\n')
+    assert part2(list(test_file)) == 4988
+    # 29 * 172 = 4988
 
-# file = """
-# #######
-# #.E...#
-# #.#..G#
-# #.###.#
-# #E#G#G#
-# #...#G#
-# #######
-# """.strip().split('\n')
-# 39 * 166 = 6474
 
-# file = """
-# #######
-# #.G...#
-# #...EG#
-# #.#.#G#
-# #..G#E#
-# #.....#
-# #######
-# """.strip().split('\n')
-# 29 * 172 = 4988
+def test_two():
+    test_file = """
+#######
+#E..EG#
+#.#G.E#
+#E.##E#
+#G..#.#
+#..E#.#
+#######
+    """.strip().split('\n')
+    assert part2(list(test_file)) == 31284
+    # 33 * 948 = 31284
 
-# file = """
-# #######
-# #E..EG#
-# #.#G.E#
-# #E.##E#
-# #G..#.#
-# #..E#.#
-# #######
-# """.strip().split('\n')
-# 33 * 948 = 31284
 
-# file = """
-# #######
-# #E.G#.#
-# #.#G..#
-# #G.#.G#
-# #G..#.#
-# #...E.#
-# #######
-# """.strip().split('\n')
-# 37 * 94 = 3478
+def test_three():
+    test_file = """
+#######
+#E.G#.#
+#.#G..#
+#G.#.G#
+#G..#.#
+#...E.#
+#######
+    """.strip().split('\n')
+    assert part2(list(test_file)) == 3478
+    # 37 * 94 = 3478
 
+def test_four():
+    test_file = """
+#######
+#.E...#
+#.#..G#
+#.###.#
+#E#G#G#
+#...#G#
+#######
+    """.strip().split('\n')
+    assert part2(list(test_file)) == 6474
+    # 39 * 166 = 6474
+
+def test_five():
+    test_file = """
+#########
+#G......#
+#.E.#...#
+#..##..G#
+#...##..#
+#...#...#
+#.G...G.#
+#.....G.#
+#########
+    """.strip().split('\n')
+    assert part2(list(test_file)) == 1140
+    # 30 * 38 = 1140
 
 
 class Unit:
@@ -119,27 +130,59 @@ class Unit:
         return next_pos
 
     def _next_pos(self, position, board, units):
+        """
+        Get the coordinate of the next tile to move to.
+
+        Finding next position is _weird_. We need to first identify all
+        the closest valid positions, then pick the first one in reading
+        order, then figure out the fastest way to get there, preferring
+        reading order in case of a tie. This is subtly different from
+        doing a BFS with moves in reading order:
+
+        ########
+        #.E....#
+        #....,.#
+        #...,G.#
+        #,.,G..#
+        #G,....#
+        ########
+
+        John Rambelf over here wants to move to one of the commas, but
+        doing a simple ordered BFS on this input will see him heading
+        left then down to the bottom-left goblin. Instead, we need a
+        separate explicit step to identify that we prefer the topmost
+        comma.
+        """
         # bfs
         seen = {position}
-        q = collections.deque(seen)
+        q = collections.deque([(position, 0)])
         from_ = {}
+        answers = set()
+        best_moves = None
         while q:
-            y, x = q.popleft()
+            (y, x), moves = q.popleft()
+            if answers and moves > best_moves:
+                goal = min(answers)
+                while from_[goal] != position:
+                    goal = from_[goal]
+                return goal
 
             for oy, ox in [(y - 1, x), (y, x - 1), (y, x + 1), (y + 1, x)]:
                 if board[oy, ox] == '#' or (oy, ox) in seen:
                     continue
                 if (oy, ox) in units:
                     if units[oy, ox].team != self.team:
-                        # we done
-                        while from_[y, x] != position:
-                            y, x = from_[y, x]
-                        return y, x
-                    else:
-                        continue
+                        answers.add((y, x))
+                        best_moves = moves
+                    continue
                 seen.add((oy, ox))
-                q.append((oy, ox))
+                q.append(((oy, ox), moves + 1))
                 from_[oy, ox] = (y, x)
+        if answers:
+            goal = min(answers)
+            while from_[goal] != position:
+                goal = from_[goal]
+            return goal
 
     def enemies_near(self, position, units):
         y, x = position
@@ -236,5 +279,6 @@ def part2(file):
             return result
 
 
-print(part1(list(file)))
-print(part2(list(file)))
+if __name__ == '__main__':
+    print(part1(list(file)))
+    print(part2(list(file)))
