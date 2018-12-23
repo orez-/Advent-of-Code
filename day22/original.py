@@ -1,33 +1,29 @@
+import collections
 import functools
 import heapq
-import typing
 
 
 DEPTH = 11739
 TARGET = (11, 718)
 
 
-class Frame(typing.NamedTuple):
-    fscore: int
-    time: int
-    x: int
-    y: int
-    item: int
-
-    @property
-    def seen(self):
-        return (self.x, self.y, self.item)
+Frame = collections.namedtuple('Frame', 'fscore time x y item')
+Frame.seen = property(lambda self: (self.x, self.y, self.item))
 
 
-def estimate(x, y):
-    return abs(TARGET[0] - x) + abs(TARGET[1] - y)
-
-
+# torch, gear, neither
+# terrain 0 item 0 or 1
+# terrain 1 item 1 or 2
+# terrain 2 item 2 or 0
 TERRAIN_TO_ITEMS = {
     0: {0, 1},
     1: {1, 2},
     2: {2, 0},
 }
+
+
+def estimate(x, y):
+    return abs(TARGET[0] - x) + abs(TARGET[1] - y)
 
 
 def get_neighbors(current):
@@ -59,8 +55,7 @@ def geo_index(x, y):
 
 @functools.lru_cache(None)
 def erosion(x, y):
-    result = ((geo_index(x, y) + DEPTH) % 20183)
-    return result
+    return (geo_index(x, y) + DEPTH) % 20183
 
 
 def terrain(x, y):
@@ -69,47 +64,36 @@ def terrain(x, y):
 
 def part1():
     total = 0
-    X, Y = TARGET
-    for x in range(X + 1):
-        for y in range(Y + 1):
+    targx, targy = TARGET
+    for x in range(targx + 1):
+        for y in range(targy + 1):
             total += terrain(x, y)
     return total
 
 
 def part2():
-    # torch, gear, neither
-    # terrain 0 item 0 or 1
-    # terrain 1 item 1 or 2
-    # terrain 2 item 2 or 0
     heap = [Frame(estimate(0, 0), 0, 0, 0, 0)]
     seen = set()
-    path = {}
+    # A*!
     while heap:
         current = heapq.heappop(heap)
         if (current.x, current.y, current.item) == (*TARGET, 0):
-            me = current
-            while me in path:
-                print(me)
-                me = path[me]
-            print(me)
             return current.time
+        if current.seen in seen:
+            continue
         seen.add(current.seen)
 
         for frame in get_neighbors(current):
             if frame.seen in seen:
                 continue
 
-            indx = next((
-                i for i, h in enumerate(heap)
-                if frame.seen == h.seen
-            ), None)
-            if indx is None:
-                heapq.heappush(heap, frame)
-                path[frame] = current
-            elif heap[indx].time > frame.time:
-                heap[indx] = frame
-                path[frame] = current
-                heapq.heapify(heap)
+            # Skip the openset-improvement step. Just add the frame regardless of openset.
+            # It's possible we're bloating the heap with extra records, but deduping on add
+            # is slow, so we dedupe on heappop.
+
+            # This also makes it so the frame itself should track the path, if we cared about that.
+            # Hey: fortunately we don't here!
+            heapq.heappush(heap, frame)
 
 
 if __name__ == '__main__':
