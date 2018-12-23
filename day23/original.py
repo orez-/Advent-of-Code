@@ -8,11 +8,14 @@ Point = collections.namedtuple('Point', 'x y z')
 
 
 def get_numbers(line):
-    return (int(match[0]) for match in re.finditer(r"-?(\d*\.\d+|\d+)", line))
+    return (int(match.group(0)) for match in re.finditer(r"-?(\d*\.\d+|\d+)", line))
 
 
-def dist(bot1, bot2):
-    return abs(bot1.x - bot2.x) + abs(bot1.y - bot2.y) + abs(bot1.z - bot2.z)
+def dist(pt1, pt2):
+    """
+    Gets the 3d Manhattan Distance (Fifth Element style?) between two points.
+    """
+    return abs(pt1.x - pt2.x) + abs(pt1.y - pt2.y) + abs(pt1.z - pt2.z)
 
 
 def halfway(minc, maxc):
@@ -102,6 +105,26 @@ def in_broad_range(minr, maxr, bot):
                 return any(dist(pt, bot) <= bot.r for pt in range_corners(minr, maxr))
 
 
+def fuzz_point(pt, bots):
+    """
+    Check directly around the given point for the point within range of the most bots.
+
+    Err... we have an off-by-one somewhere. Looks like somehow we get the range down to:
+    minr = Point(x=56721513, y=49483609, z=54441241)
+    maxr = Point(x=56721513, y=49483610, z=54441242)
+
+    Forget solving the issue or being clever: let's just check the immediate area and pick
+    whatever works best there.
+    """
+    points = [
+        Point(pt.x + dx, pt.y + dy, pt.z + dz)
+        for dx in (0, 1)
+        for dy in (0, 1)
+        for dz in (0, 1)
+    ]
+    return max(points, key=lambda p: sum(1 for bot in bots if dist(bot, p) <= bot.r))
+
+
 def part1(file):
     bots = []
     for line in file:
@@ -121,29 +144,22 @@ def part2(file):
     for line in file:
         bots.append(Bot(*get_numbers(line)))
 
-    p = Point(x=56721513, y=49483609, z=54441241)
-    for dx in (0, 1):
-        for dy in (0, 1):
-            for dz in (0, 1):
-                pt = Point(p.x + dx, p.y + dy, p.z + dz)
-                if sum(1 for bot in bots if dist(bot, pt) <= bot.r) == 977:
-                    print("!", sum(pt))
-
     assert len(bots) == len(set(bots))
 
     min_range = Point(-200000000, -200000000, -200000000)
     max_range = Point( 200000000,  200000000,  200000000)
 
+    # have to negate for a "max" heap
+    # ...it is possible that I am very fortunate that the solution for my input is all positive
     heap = [(-len(bots), min_range, max_range)]
 
     while heap:
-        tot, ominr, omaxr = heapq.heappop(heap)
+        _, ominr, omaxr = heapq.heappop(heap)
 
         splits = list(subdivide_range(ominr, omaxr))
         if not splits:
-            print(-tot)
-            print(ominr)
-            return sum(map(abs, ominr))
+            point = fuzz_point(ominr, bots)
+            return sum(map(abs, point))
         for minr, maxr in splits:
             num = sum(1 for bot in bots if in_broad_range(minr, maxr, bot))
             heapq.heappush(heap, (-num, minr, maxr))
