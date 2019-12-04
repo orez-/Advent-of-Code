@@ -17,6 +17,7 @@ Part 1 here was a regex checking for the double-adjacent, and a comparison again
 
 The trick to part 2 is, since we're guaranteed the digits of matching numbers are never decreasing, the double-adjacent check can just be a total count of the digits without worrying about adjacency.
 This means we can use `collections.Counter` to count up and identify our digit groups.
+I'm glad this worked out, because I completely forgot about `itertools.groupby` until like an hour later.
 
 I managed to put this together pretty quickly and place pretty well for both parts.
 I appreciate that the problem description of this one was shorter than the previous days this year so far.
