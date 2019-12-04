@@ -30,7 +30,6 @@ def intersection2(hline, vline):
 
 
 def get_lines(commands):
-    smallest = float("inf")
     vlines = []
     hlines = []
     x, y = 0, 0
