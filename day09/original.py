@@ -1,10 +1,13 @@
+import collections
+
 HALT = "halt"
 
 
 class Tape:
     def __init__(self, memory, input_value=None):
+        self.relative_base = 0
         self.input_value = input_value
-        self._memory = memory
+        self._memory = collections.defaultdict(int, enumerate(memory))
         self._head_address = 0
 
     def head(self):
@@ -22,17 +25,26 @@ class Tape:
         head = self._head_address + 1
         self.jump_abs(head + num_parameters)
 
-        parameters = self._memory[head : head + num_parameters]
+        parameters = [self._memory[v] for v in range(head, head + num_parameters)]
+        assert len(parameters) == num_parameters
 
         # Translate parameters to position mode or immediate mode based on the opcode.
         # Do not translate the last parameter when `write=True`.
-        for param_idx, param in enumerate(parameters[: num_parameters - write]):
+        for param_idx, param in enumerate(parameters):
+            is_write_param = param_idx == num_parameters - 1 and write
             check = 10 ** (param_idx + 2)
             mode_flag = (opcode // check) % 10
 
             # position mode
-            if not mode_flag:
-                parameters[param_idx] = self._memory[param]
+            if mode_flag == 0:
+                if not is_write_param:
+                    parameters[param_idx] = self._memory[param]
+            # relative mode
+            elif mode_flag == 2:
+                if is_write_param:
+                    parameters[param_idx] += self.relative_base
+                else:
+                    parameters[param_idx] = self._memory[param + self.relative_base]
 
         return parameters
 
@@ -115,6 +127,12 @@ def equals(tape):
     tape[output] = int(first == second)
 
 
+@register_opcode(9)
+def set_relative_base(tape):
+    [first] = tape.grab_parameters(1)
+    tape.relative_base += first
+
+
 @register_opcode(99)
 def halt(tape):
     return HALT
@@ -126,7 +144,7 @@ def part1(memory):
 
 
 def part2(memory):
-    tape = Tape(memory, input_value=5)
+    tape = Tape(memory, input_value=2)
     tape.run()
 
 
