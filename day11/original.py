@@ -63,6 +63,8 @@ class Tape:
             result = opcodes[code](self)
             if result == HALT:
                 return
+            if result is not None:
+                yield result
 
 
 opcodes = {}
@@ -96,7 +98,7 @@ def input_(tape):
 @register_opcode(4)
 def output_value(tape):
     [val] = tape.grab_parameters(1)
-    print(val)
+    return val
 
 
 @register_opcode(5)
@@ -139,13 +141,60 @@ def halt(tape):
 
 
 def part1(memory):
-    tape = Tape(memory, input_value=1)
-    tape.run()
+    # b1 w2
+    seen = set()
+    panels = collections.defaultdict(int)
+    x = 0
+    y = 0
+    fx = 0
+    fy = -1
+    tape = Tape(memory, input_value=0)
+
+    outputs = tape.run()
+    for color in outputs:
+        panels[x, y] = color
+        seen.add((x, y))
+
+        turn = next(outputs)
+        if turn:
+            fx, fy = -fy, fx
+        else:
+            fx, fy = fy, -fx
+        x += fx
+        y += fy
+        tape.input_value = panels[x, y]
+    return len(seen)
 
 
 def part2(memory):
-    tape = Tape(memory, input_value=2)
-    tape.run()
+    # b1 w2
+    seen = set()
+    panels = collections.defaultdict(int)
+    panels[0, 0] = 1
+    x = 0
+    y = 0
+    fx = 0
+    fy = -1
+    tape = Tape(memory, input_value=1)
+
+    outputs = tape.run()
+    for color in outputs:
+        panels[x, y] = color
+        seen.add((x, y))
+
+        turn = next(outputs)
+        if turn:
+            fx, fy = -fy, fx
+        else:
+            fx, fy = fy, -fx
+        x += fx
+        y += fy
+        tape.input_value = panels[x, y]
+
+    for y in range(0, 8):
+        for x in range(0, 70):
+            print(end="#" if panels[x, y] else " ")
+        print()
 
 
 if __name__ == '__main__':
@@ -153,5 +202,5 @@ if __name__ == '__main__':
         file_str = f.read()
         file = file_str.strip().split('\n')
     file = list(map(int, file[0].split(',')))
-    part1(list(file))
+    print(part1(list(file)))
     part2(list(file))
