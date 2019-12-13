@@ -9,11 +9,11 @@ eg, if Europa is at 0, 2, 8 and Callisto is at 2, 2, 2, Europa's velocity is mod
 
 **Part 1** asks for the total "energy" in the system.
 It defines potential energy of a moon as the Manhattan magnitude of its position from the origin, and its kinetic energy as the Manhattan magnitude of its velocity, and asks us to multiply these together for each moon and sum them for the solution.
-The answer for my input was 7202.
+The answer for my input is 7202.
 
 **Part 2** asks for the time at which the moons return to their initial state.
 The problem notes that the naive solution will not be efficient enough to produce an answer
-The answer for my input was 537881600740876.
+The answer for my input is 537881600740876.
 
 
 ## Retrospective

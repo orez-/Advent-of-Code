@@ -12,12 +12,12 @@ The Intcode program will output updates to tiles by yielding the x coordinate, t
 - 4 is a ball tile. The ball moves diagonally and bounces off objects.
 
 **Part 1** asks how many block tiles exist at the start of the game.
-The answer for my input was 309
+The answer for my input is 309
 
 **Part 2** wants us to play the game to completion, moving the paddle via Intcode inputs.
 It asks for our score at the end of the game.
 The score is kept in coordinate -1, 0.
-The answer for my input was 15410.
+The answer for my input is 15410.
 
 
 ## Retrospective

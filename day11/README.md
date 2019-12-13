@@ -11,10 +11,10 @@ Starting on an infinite canvas of black squares:
 - repeat until the program halts
 
 **Part 1** has us count the number of squares that get painted at least once.
-The answer for my input was 2056.
+The answer for my input is 2056.
 
 **Part 2** has us change the starting square to white initially, and print out the resulting painted text.
-The answer for my input was GLBEPJZP.
+The answer for my input is GLBEPJZP.
 
 
 ## Retrospective
