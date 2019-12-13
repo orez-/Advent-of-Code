@@ -141,13 +141,72 @@ def halt(tape):
 
 
 def part1(memory):
+    # 0 is an empty tile. No game object appears in this tile.
+    # 1 is a wall tile. Walls are indestructible barriers.
+    # 2 is a block tile. Blocks can be broken by the ball.
+    # 3 is a horizontal paddle tile. The paddle is indestructible.
+    # 4 is a ball tile. The ball moves diagonally and bounces off objects.
+
     tape = Tape(memory, input_value=0)
-    list(tape.run())
+    outputs = list(tape.run())
+    return outputs[2::3].count(2)
+
+
+def display(board):
+    lookup = {
+        0: ".",
+        1: "#",
+        2: "$",
+        3: "=",
+        4: "o",
+        None: " ",
+    }
+    build = []
+    for y in range(0, 30):
+        for x in range(0, 100):
+            build.append(lookup[board.get((x, y))])
+        build.append("\n")
+    print(''.join(build))
+    print(board['score'])
 
 
 def part2(memory):
+    memory[0] = 2
     tape = Tape(memory, input_value=0)
-    list(tape.run())
+    outputs = tape.run()
+    tiles = {}
+    paddle_x = 17
+    for _ in range(35 * 25):
+        x = next(outputs)
+        y = next(outputs)
+        v = next(outputs)
+        tiles[x, y] = v
+
+    try:
+        while True:
+            v = 0
+            while v == 0:
+                x = next(outputs)
+                y = next(outputs)
+                v = next(outputs)
+                if x == -1:
+                    tiles["score"] = v
+                else:
+                    tiles[x, y] = v
+
+            if v == 4:
+                if x < paddle_x:
+                    tape.input_value = -1
+                    paddle_x -= 1
+                elif x > paddle_x:
+                    tape.input_value = 1
+                    paddle_x += 1
+                else:
+                    tape.input_value = 0
+
+            # display(tiles)
+    except StopIteration:
+        return tiles['score']
 
 
 if __name__ == '__main__':
@@ -156,4 +215,4 @@ if __name__ == '__main__':
         file = file_str.strip().split('\n')
     file = list(map(int, file[0].split(',')))
     print(part1(list(file)))
-    part2(list(file))
+    print(part2(list(file)))
