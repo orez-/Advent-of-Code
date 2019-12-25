@@ -1,5 +1,3 @@
-import itertools
-
 from intcode import Tape
 
 
@@ -16,9 +14,7 @@ def get_to_command(runner):
             result = ''.join(chars)
             debug(result)
             return result
-    rest = ''.join(chars).strip()
-    if rest:
-        print(rest)
+    return ''.join(chars).strip()
 
 
 def game_generator(tape):
@@ -101,23 +97,36 @@ def part1(file):
         "monolith",
         "weather machine",
     }
-    for mset in powerset(all_items):
-        for item in all_items:
-            if item in mset:
-                game.send(f"take {item}")
-            else:
-                game.send(f"drop {item}")
-        game.send("north")
+    for remove, add in powerset_delta(all_items):
+        if add:
+            game.send(f"take {add}")
+        else:
+            game.send(f"drop {remove}")
+        result = game.send("north")
+        if "Alert!" not in result:
+            return result
 
 
-def powerset(iterable):
-    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
-    s = list(iterable)
-    return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(len(s)+1))
+def powerset_delta(collection):
+    # https://en.wikipedia.org/wiki/Gray_code
+    lookup = {
+        key: value
+        for i, elem in enumerate(collection)
+        for key, value in [
+            (1 << i, (elem, None)),
+            (-1 << i, (None, elem)),
+        ]
+    }
+    n = len(lookup) // 2
+    last_gray = 0
+    for i in range(1, 1 << n):
+        gray = i ^ (i >> 1)
+        yield lookup[gray - last_gray]
+        last_gray = gray
 
 
 if __name__ == '__main__':
     with open('file.txt') as f:
         file_str = f.read()
         file = file_str.rstrip("\n").split('\n')
-    part1(list(file))
+    print(part1(list(file)))
