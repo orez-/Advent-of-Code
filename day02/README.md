@@ -1,4 +1,4 @@
-# Day 5: 1202 Program Alarm
+# Day 2: 1202 Program Alarm
 
 ## Problem Summary ([?](https://adventofcode.com/2019/day/2))
 

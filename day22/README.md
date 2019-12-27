@@ -1,4 +1,4 @@
-# Day 22: <name>
+# Day 22: Slam Shuffle
 
 ## Problem Summary ([?](https://adventofcode.com/2019/day/22))
 
