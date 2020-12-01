@@ -16,6 +16,7 @@ I hit the ground running even for this first year: I solved the first problem on
 However, I only started staying up for the midnight release consistently on Day 13.
 Despite this, I ended up placing [42nd overall](https://adventofcode.com/2015/leaderboard).
 
+- [Advent of Code 2020](https://github.com/orez-/Advent-of-Code-2020)
 - [Advent of Code 2019](https://github.com/orez-/Advent-of-Code-2019)
 - [Advent of Code 2018](https://github.com/orez-/Advent-of-Code-2018)
 - [Advent of Code 2017](https://github.com/orez-/Advent-of-Code-2017)
