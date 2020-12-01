@@ -8,6 +8,7 @@ I didn't end up following through with this for all of my solutions.
 
 I ended up placing [fourth overall](https://adventofcode.com/2016/leaderboard)!
 
+- [Advent of Code 2020](https://github.com/orez-/Advent-of-Code-2020)
 - [Advent of Code 2019](https://github.com/orez-/Advent-of-Code-2019)
 - [Advent of Code 2018](https://github.com/orez-/Advent-of-Code-2018)
 - [Advent of Code 2017](https://github.com/orez-/Advent-of-Code-2017)
