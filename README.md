@@ -19,6 +19,7 @@ Some interesting notes:
 
 I ended up tying for [31st overall](https://adventofcode.com/2019/leaderboard).
 
+- [Advent of Code 2020](https://github.com/orez-/Advent-of-Code-2020)
 - Advent of Code 2019
 - [Advent of Code 2018](https://github.com/orez-/Advent-of-Code-2018)
 - [Advent of Code 2017](https://github.com/orez-/Advent-of-Code-2017)
