@@ -10,6 +10,7 @@ Some interesting notes:
 
 I placed [ninth overall](https://adventofcode.com/2017/leaderboard), missing eighth by _one point_ 😩
 
+- [Advent of Code 2020](https://github.com/orez-/Advent-of-Code-2020)
 - [Advent of Code 2019](https://github.com/orez-/Advent-of-Code-2019)
 - [Advent of Code 2018](https://github.com/orez-/Advent-of-Code-2018)
 - Advent of Code 2017
