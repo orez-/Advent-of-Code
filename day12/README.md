@@ -14,6 +14,7 @@ In **part 1**:
 - Action L means to turn left the given number of degrees.
 - Action R means to turn right the given number of degrees.
 - Action F means to move forward by the given value in the direction the ship is currently facing.
+
 The ferry starts facing east.
 The answer for my input is 1645.
 
@@ -25,6 +26,7 @@ The answer for my input is 1645.
 - Action L means to rotate the waypoint around the ship left (counter-clockwise) the given number of degrees.
 - Action R means to rotate the waypoint around the ship right (clockwise) the given number of degrees.
 - Action F means to move forward to the waypoint a number of times equal to the given value.
+
 The answer for my input is 35292.
 
 
