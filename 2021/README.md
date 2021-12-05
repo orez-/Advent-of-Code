@@ -8,3 +8,4 @@ My solutions for [Advent of Code 2021](http://adventofcode.com/2021).
 | [Day 2: Dive!](day02) ([?](https://adventofcode.com/2021/day/2)) | [Befunge-93](https://esolangs.org/wiki/Befunge) |
 | [Day 3: Binary Diagnostic](day03) ([?](https://adventofcode.com/2021/day/3)) | [COBOL](https://en.wikipedia.org/wiki/COBOL) |
 | [Day 4: Giant Squid](day04) ([?](https://adventofcode.com/2021/day/4)) | [Dylan](https://en.wikipedia.org/wiki/Dylan_(programming_language)) |
+| [Day 5: Hydrothermal Venture](day05) ([?](https://adventofcode.com/2021/day/5)) | [Emojicode](https://www.emojicode.org/) |
