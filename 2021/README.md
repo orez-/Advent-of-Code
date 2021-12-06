@@ -15,3 +15,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 3: Binary Diagnostic](day03) ([?](https://adventofcode.com/2021/day/3)) | [COBOL](https://en.wikipedia.org/wiki/COBOL) |
 | [Day 4: Giant Squid](day04) ([?](https://adventofcode.com/2021/day/4)) | [Dylan](https://en.wikipedia.org/wiki/Dylan_(programming_language)) |
 | [Day 5: Hydrothermal Venture](day05) ([?](https://adventofcode.com/2021/day/5)) | [Emojicode](https://www.emojicode.org/) |
+| [Day 6: Lanternfish](day06) ([?](https://adventofcode.com/2021/day/6)) | [Futhark](https://futhark-lang.org/) |
