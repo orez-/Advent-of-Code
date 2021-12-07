@@ -16,3 +16,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 4: Giant Squid](day04) ([?](https://adventofcode.com/2021/day/4)) | [Dylan](https://en.wikipedia.org/wiki/Dylan_(programming_language)) |
 | [Day 5: Hydrothermal Venture](day05) ([?](https://adventofcode.com/2021/day/5)) | [Emojicode](https://www.emojicode.org/) |
 | [Day 6: Lanternfish](day06) ([?](https://adventofcode.com/2021/day/6)) | [Futhark](https://futhark-lang.org/) |
+| [Day 7: The Treachery of Whales](day07) ([?](https://adventofcode.com/2021/day/7)) | [Groovy](https://groovy-lang.org/) |
