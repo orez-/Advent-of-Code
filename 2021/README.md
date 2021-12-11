@@ -19,3 +19,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 7: The Treachery of Whales](day07) ([?](https://adventofcode.com/2021/day/7)) | [Groovy](https://groovy-lang.org/) |
 | [Day 8: Seven Segment Search](day08) ([?](https://adventofcode.com/2021/day/8)) | [Haskell](https://www.haskell.org/) |
 | [Day 9: Smoke Basin](day09) ([?](https://adventofcode.com/2021/day/9)) | [Idris 2](https://www.idris-lang.org/) |
+| [Day 10: Syntax Scoring](day10) ([?](https://adventofcode.com/2021/day/10)) | [Jelly](https://github.com/DennisMitchell/jellylanguage) |
