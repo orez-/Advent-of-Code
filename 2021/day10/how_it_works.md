@@ -49,14 +49,14 @@
 
 # Part 2: Jelly, 69 bytes
 
-## How it works
-
 ```jelly
 i@€“([{<”Ė5*$1¦€×/€S÷5
 œṣØ[FœṣØ(FœṣØ<FœṣØ{F
 ɠÇÐL
 Ç98Ð¡ḟ“([{<”$Ðḟ1Ŀ€Æṁ
 ```
+
+## How it works
 
 ```
 Ç98Ð¡ḟ“([{<”$Ðḟ1Ŀ€Æṁ  Main link. No arguments.
