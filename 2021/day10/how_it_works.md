@@ -22,15 +22,15 @@
 ɠ                                  Read a single line from STDIN.
  Ç                                 Call the chunkstripper link..
   ÐL                               ..on loop until the value stops changing
-     “([{<”                        the literal string ([{<
+     “([{<”                        The literal string ([{<
     ḟ                              Filter; remove any ([{< from our line,
                                      leaving us only with )]}>
            Ḣ                       Head; grab the first element
-              “)]}>”               the literal string )]}>
+              “)]}>”               The literal string )]}>
             i@                     The index of our offending character in the literal
                      “£“8“¤Ġ“c⁸“’  An integer list literal.
                                      This is equivalent to [3,57,1197,25137,0].
-                    ị              List access; the score of our offending literal
+                    ị              List access; the score of our offending character
 ```
 
 ```
