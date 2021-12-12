@@ -7,8 +7,8 @@
 Installation instructions for Jelly can be found at https://github.com/DennisMitchell/jellylanguage
 
 ```bash
-jelly fun part1.jelly
-jelly fun part2.jelly
+jelly fun part1.jelly < file.txt
+jelly fun part2.jelly < file.txt
 ```
 
 The interpreter is also available online: https://tio.run/#jelly
