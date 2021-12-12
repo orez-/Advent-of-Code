@@ -21,3 +21,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 9: Smoke Basin](day09) ([?](https://adventofcode.com/2021/day/9)) | [Idris 2](https://www.idris-lang.org/) |
 | [Day 10: Syntax Scoring](day10) ([?](https://adventofcode.com/2021/day/10)) | [Jelly](https://github.com/DennisMitchell/jellylanguage) |
 | [Day 11: Dumbo Octopus](day11) ([?](https://adventofcode.com/2021/day/11)) | [Kotlin](https://kotlinlang.org/) |
+| [Day 12: Passage Pathing](day12) ([?](https://adventofcode.com/2021/day/12)) | [Lua](https://www.lua.org/) |
