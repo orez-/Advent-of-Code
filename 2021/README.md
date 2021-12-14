@@ -23,3 +23,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 11: Dumbo Octopus](day11) ([?](https://adventofcode.com/2021/day/11)) | [Kotlin](https://kotlinlang.org/) |
 | [Day 12: Passage Pathing](day12) ([?](https://adventofcode.com/2021/day/12)) | [Lua](https://www.lua.org/) |
 | [Day 13: Transparent Origami](day13) ([?](https://adventofcode.com/2021/day/13)) | [Miranda](http://miranda.org.uk) |
+| [Day 14: Extended Polymerization](day14) ([?](https://adventofcode.com/2021/day/14)) | [Nim](https://nim-lang.org/) |
