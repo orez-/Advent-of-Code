@@ -79,6 +79,7 @@ In order:
 - the number of subpacket bits remaining. Defaults to 0
 - the number of bits total in this packet (the headers + the bits in its subpackets)
 - the in-progress aggregate value
+
 Then it's just a question of maintaining those frames, and popping the top one and combining it with the next frame down whenever one of the counters hits _exactly_ zero (this means an initial 0 value will never trigger).
 
 After getting the algorithm together, I transcribed the text into an image with [GIMP](https://www.gimp.org/).
