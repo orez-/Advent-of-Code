@@ -5,7 +5,7 @@
 ## Usage
 
 Various Piet compilers and interpreters can be found at https://www.dangermouse.net/esoteric/piet/tools.html .
-I have also included a [`piet`](piet) interpreter which implements all the features from the spec necessary for my solution, modified from [the version] on the site.
+I have also included a [`piet`](piet) interpreter which implements all the features from the spec necessary for my solution, modified from [the version](https://www.dangermouse.net/esoteric/piet/Piet_py.txt) on the site.
 
 ```bash
 python3 -m pip install numpy Pillow
