@@ -1,0 +1,37 @@
+class Main
+  action Max(integer a, integer b) returns integer
+    if a > b
+      return a
+    end
+    return b
+  end
+
+  action FireTo(integer dy, integer top, integer bottom) returns integer
+    y = 0
+    highest = 0
+    repeat while y + dy >= bottom
+      y = y + dy
+      highest = Max(y, highest)
+      dy = dy - 1
+    end
+    if y <= top
+      return highest
+    else
+      return -1
+    end
+  end
+
+  action Main
+    y = 0
+    next = 0
+    answer = 0
+    repeat 999 times
+      next = FireTo(y, -65, -99)
+      if next not= -1
+        answer = next
+      end
+      y = y + 1
+    end
+    output answer
+  end
+end

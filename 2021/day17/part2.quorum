@@ -1,0 +1,68 @@
+use Libraries.Compute.Math
+use Libraries.Containers.Array
+use Libraries.Containers.HashTable
+use Libraries.Containers.Iterator
+class Main
+  action FireXIn(integer time, integer left, integer right) returns Array<integer>
+    Math math
+    leftn = cast(number, left)
+    rightn = cast(number, right)
+    timen = cast(number, time)
+
+    number ldx = (leftn / timen) + (timen / 2)
+    number rdx = (rightn / timen) + (timen / 2)
+
+    ldxi = cast(integer, math:Ceiling(ldx - 0.5))
+    rdxi = cast(integer, math:Floor(rdx - 0.5))
+    Array<integer> answer
+    // x = (dx + 1) * dx / 2
+    // there is only 1 integer value between x=201 and x=230:
+    // dx = 20 (which reaches 0 at t=20).
+    // It is impossible to go slower and still hit the target, and faster will overshoot.
+    if time > 20
+      answer:Add(20)
+      return answer
+    end
+    repeat while ldxi <= rdxi
+      answer:Add(ldxi)
+      ldxi = ldxi + 1
+    end
+    return answer
+  end
+
+  action FireYTo(integer dy, integer bottom, integer top) returns Array<integer>
+    t = 0
+    y = 0
+    Array<integer> ts
+    repeat while y + dy >= bottom
+      y = y + dy
+      dy = dy - 1
+      t = t + 1
+      if y <= top
+        ts:Add(t)
+      end
+    end
+    return ts
+  end
+
+  action Main
+    total = 0
+    y = -99
+    repeat 999 times
+      Array<integer> next = FireYTo(y, -99, -65)
+      Iterator<integer> it = next:GetIterator()
+      HashTable<integer, boolean> xs
+      repeat while it:HasNext()
+        integer time = it:Next()
+        Iterator<integer> it2 = FireXIn(time, 201, 230):GetIterator()
+        repeat while it2:HasNext()
+          integer x = it2:Next()
+          xs:Add(x, true)
+        end
+      end
+      total = total + xs:GetSize()
+      y = y + 1
+    end
+    output total
+  end
+end
