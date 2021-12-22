@@ -27,3 +27,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 15: Chiton](day15) ([?](https://adventofcode.com/2021/day/15)) | [OCaml](https://ocaml.org/) |
 | [Day 16: Packet Decoder](day16) ([?](https://adventofcode.com/2021/day/16)) | [Piet](https://www.dangermouse.net/esoteric/piet.html) |
 | [Day 17: Trick Shot](day17) ([?](https://adventofcode.com/2021/day/17)) | [Quorum](https://quorumlanguage.com/) |
+| [Day 18: Snailfish](day18) ([?](https://adventofcode.com/2021/day/18)) | [Rust](https://www.rust-lang.org/) |
