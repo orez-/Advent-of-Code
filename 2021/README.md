@@ -30,3 +30,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 18: Snailfish](day18) ([?](https://adventofcode.com/2021/day/18)) | [Rust](https://www.rust-lang.org/) |
 | Day 19: Beacon Scanner ([?](https://adventofcode.com/2021/day/19)) | [ in progress ] |
 | [Day 20: Trench Map](day20) ([?](https://adventofcode.com/2021/day/20)) | [TypeScript](https://www.typescriptlang.org/) |
+| [Day 21: Dirac Dice](day21) ([?](https://adventofcode.com/2021/day/21)) | [Unicon](http://www.unicon.org/) |

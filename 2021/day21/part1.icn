@@ -1,0 +1,26 @@
+procedure dice()
+    repeat(suspend 1 to 100)
+end
+
+procedure main()
+    die := create dice()
+    rolls := 0
+    one_spot := 1
+    two_spot := 2
+    one_pts := 0
+    two_pts := 0
+
+    repeat {
+        one_spot := (one_spot + @die + @die + @die) % 10
+        one_pts +:= (0 ~= one_spot)|10
+        rolls +:= 3
+        if one_pts >= 1000 then
+            return write(two_pts * rolls)
+
+        two_spot := (two_spot + @die + @die + @die) % 10
+        two_pts +:= (0 ~= two_spot)|10
+        rolls +:= 3
+        if two_pts >= 1000 then
+            return write(one_pts * rolls)
+    }
+end

@@ -1,0 +1,45 @@
+link printf
+
+record state(one_spot, two_spot, one_pts, two_pts, one_turn)
+record wins(one, two)
+
+procedure step(st, stp)
+    if st.one_turn = 1 then {
+        one_spot := (0 ~= ((st.one_spot + stp) % 10))|10
+        return state(one_spot, st.two_spot, st.one_pts + one_spot, st.two_pts, 0)
+    }
+    else {
+        two_spot := (0 ~= ((st.two_spot + stp) % 10))|10
+        return state(st.one_spot, two_spot, st.one_pts, st.two_pts + two_spot, 1)
+    }
+end
+
+procedure winner_counts(st, cache)
+    kkey := sprintf("%d,%d,%d,%d,%d",
+        st.one_spot, st.two_spot,
+        st.one_pts, st.two_pts,
+        st.one_turn)
+    if member(cache, kkey) then
+        return cache[kkey]
+    if st.one_pts >= 21 then
+        return wins(1, 0)
+    if st.two_pts >= 21 then
+        return wins(0, 1)
+    c3 := winner_counts(step(st, 3), cache)
+    c4 := winner_counts(step(st, 4), cache)
+    c5 := winner_counts(step(st, 5), cache)
+    c6 := winner_counts(step(st, 6), cache)
+    c7 := winner_counts(step(st, 7), cache)
+    c8 := winner_counts(step(st, 8), cache)
+    c9 := winner_counts(step(st, 9), cache)
+    a := c3.one + c4.one * 3 + c5.one * 6 + c6.one * 7 + c7.one * 6 + c8.one * 3 + c9.one
+    b := c3.two + c4.two * 3 + c5.two * 6 + c6.two * 7 + c7.two * 6 + c8.two * 3 + c9.two
+    total := wins(a, b)
+    cache[kkey] := total
+    return total
+end
+
+procedure main()
+    answer := winner_counts(state(1, 2, 0, 0, 1), table())
+    write(answer.one < answer.two | answer.one)
+end
