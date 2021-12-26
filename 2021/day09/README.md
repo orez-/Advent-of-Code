@@ -9,7 +9,7 @@ I found it easiest to just `brew install idris2`.
 
 ```bash
 idris2 part1.idr -o part1
-idris2 -p contrib part1.idr -o part1
+idris2 -p contrib part2.idr -o part2
 ./build/exec/part1 < file.txt
 ./build/exec/part2 < file.txt
 ```
