@@ -1,0 +1,204 @@
+def STDIN = 0;
+
+def split(s: string, p: byte) -> Vector<string> {
+    var pieces = Vector<string>.new();
+    var current = StringBuilder.new();
+    for (c in s) {
+        if (c == p && current.length != 0) {
+            pieces.put(current.extract());
+        }
+        else {
+            current.putc(c);
+        }
+    }
+    if (current.length != 0) {
+        pieces.put(current.extract());
+    }
+    return pieces;
+}
+
+def readStdin() -> string {
+    var data = StringBuilder.new();
+    var b = byte.!(System.fileRead(STDIN));
+    while (b != 255) {
+        data.putc(b);
+        b = byte.!(System.fileRead(STDIN));
+    }
+    return data.extract();
+}
+
+// `a<b` would be a parse error here.
+// I guess it tries to parse this as a generic argument.
+// Brutal!
+def min(a: long, b: long) -> long {
+    return if(b>a, a, b);
+}
+
+def max(a: long, b: long) -> long {
+    return if(a>b, a, b);
+}
+
+class Cube {
+    var x0: long;
+    var x1: long;
+    var y0: long;
+    var y1: long;
+    var z0: long;
+    var z1: long;
+    var on: bool;
+
+    new(x0, x1, y0, y1, z0, z1) { on = true; }
+
+    def toString() -> string {
+        var builder = StringBuilder.new();
+        builder.puts(if(on, "on ", "off "));
+        builder.put2("%d..%d,", x0, x1);
+        builder.put2("%d..%d,", y0, y1);
+        builder.put2("%d..%d", z0, z1);
+        return builder.extract();
+    }
+
+    def isPart1() -> bool {
+        return x0 >= -50 && x1 <= 51 &&
+            y0 >= -50 && y1 <= 51 &&
+            z0 >= -50 && z1 <= 51;
+    }
+
+    def volume() -> long {
+        return (x1 - x0) * (y1 - y0) * (z1 - z0);
+    }
+
+    def wellFormed() -> bool {
+        return volume() > 0;
+    }
+
+    def subtract(other: Cube) -> Vector<Cube> {
+        var result = Vector<Cube>.new();
+        def doOverlap =
+            other.x0 < x1 && x0 < other.x1 &&
+            other.y0 < y1 && y0 < other.y1 &&
+            other.z0 < z1 && z0 < other.z1;
+        if (!doOverlap) return result.put(this);
+        def left = max(x0, other.x0);
+        def right = min(x1, other.x1);
+        def bottom = max(y0, other.y0);
+        def top = min(y1, other.y1);
+        result.put(Cube.new(  // x left
+            x0, other.x0,
+            y0, y1,
+            z0, z1
+        ));
+        result.put(Cube.new(  // x right
+            other.x1, x1,
+            y0, y1,
+            z0, z1
+        ));
+        result.put(Cube.new(  // y bottom
+            left, right,
+            y0, other.y0,
+            z0, z1
+        ));
+        result.put(Cube.new(  // y top
+            left, right,
+            other.y1, y1,
+            z0, z1
+        ));
+        result.put(Cube.new(  // z front
+            left, right,
+            bottom, top,
+            z0, other.z0
+        ));
+        result.put(Cube.new(  // z back
+            left, right,
+            bottom, top,
+            other.z1, z1
+        ));
+        retain(result, Cube.wellFormed);
+        return result;
+    }
+}
+
+def lineToCube(line: string) -> Cube {
+    var on: bool;
+    var idx = 0;
+    if (Strings.startsWith(line, "on")) {
+        on = true;
+        idx = 5;
+    }
+    else {
+        on = false;
+        idx = 6;
+    }
+    var x0 = Ints.parseDecimal(line, idx);
+    idx += x0.0 + 2;
+    var x1 = Ints.parseDecimal(line, idx);
+    idx += x1.0 + 3;
+    var y0 = Ints.parseDecimal(line, idx);
+    idx += y0.0 + 2;
+    var y1 = Ints.parseDecimal(line, idx);
+    idx += y1.0 + 3;
+    var z0 = Ints.parseDecimal(line, idx);
+    idx += z0.0 + 2;
+    var z1 = Ints.parseDecimal(line, idx);
+
+    var cube = Cube.new(
+        x0.1, x1.1 + 1,
+        y0.1, y1.1 + 1,
+        z0.1, z1.1 + 1
+    );
+    cube.on = on;
+    return cube;
+}
+
+def map<A, B>(vec: Vector<A>, func: A -> B) -> Vector<B> {
+    if (vec == null) return null;
+    def len = vec.length;
+    var r = Vector<B>.new();
+    r.grow(len);
+    for (i < len) { r[i] = func(vec[i]); }
+    r.length = len;
+    return r;
+}
+
+def retain<T>(vec: Vector<T>, pred: T -> bool) {
+    var writeIdx = 0;
+    for (i < vec.length) {
+        if (pred(vec.array[i])) {
+            vec.array[writeIdx] = vec.array[i];
+            writeIdx++;
+        }
+    }
+    vec.length = writeIdx;
+}
+
+def putl(x: long) {
+    var output = Array<byte>.new(20);
+    var count = Longs.renderDecimal(x, output, 0);
+    def result = Arrays.range(output, 0, count);
+
+    System.puts(result);
+    System.puts("\n");
+}
+
+def main(args: Array<string>) {
+    def lines = split(readStdin(), '\n');
+    var cubes = map(lines, lineToCube(_));
+    def arg = if(args.length > 1, args[1], "null");
+    if (Strings.equal(arg, "part1")) retain(cubes, Cube.isPart1);
+    else if (!Strings.equal(arg, "part2")) {
+        var builder = StringBuilder.new();
+        builder.put1("Please specify \'part1\' or \'part2\', not \'%s\'\n", arg);
+        System.puts(builder.extract());
+        return;
+    }
+    for (newCube in cubes.extract()) {
+        for (oldCube in cubes.extract()) {
+            cubes.puta(oldCube.subtract(newCube).extract());
+        }
+        if (newCube.on) cubes.put(newCube);
+    }
+
+    var total = 0l;
+    for (cube in cubes.extract()) total += cube.volume();
+    putl(total);
+}
