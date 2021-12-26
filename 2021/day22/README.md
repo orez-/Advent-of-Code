@@ -68,7 +68,7 @@ Random gripes:
 
 Overall Virgil is a little rough, a little "batteries not included, and also instructions not included, and also toy not included".
 But for a project put together by just two people, it's surprisingly polished, with some neat ideas executed well.
-As the language exists today I don't have a lot of desire to keep working with it, but I'm rooting for this it.
+As the language exists today I don't have a lot of desire to keep working with it, but I'm rooting for it.
 I hope to see the language continue to grow and evolve.
 
 [^how]: You need to pass them as additional command line arguments.
