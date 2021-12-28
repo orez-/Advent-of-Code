@@ -1,238 +1,60 @@
-/* Module "queue.wren" */
-// https://rosettacode.org/wiki/Category_talk:Wren-queue
-
-/* Queue represents a FIFO list of values. */
-class Queue is Sequence {
-     // Constructs a new empty queue.
-    construct new() { _queue = [] }
-
-    // Returns the number of elements in the queue.
-    count { _queue.count }
-
-    // Returns whether or not the queue is empty.
-    isEmpty { count == 0 }
-
-    // Removes all elements from the queue.
-    clear() { _queue.clear() }
-
-    // Returns the first item of the queue without removing it.
-    // Returns null if the queue is empty.
-    peek() { (!isEmpty) ? _queue[0] : null }
-
-    // Adds 'item' to the queue and returns it.
-    push(item) { _queue.add(item) }
-
-    // Adds a sequence of 'items' (in order) to the queue and returns them.
-    pushAll(items) {
-        if (!(items is Sequence)) Fiber.abort("Argument must be a Sequence.")
-        return _queue.addAll(items)
-    }
-
-    // Removes the first item from the queue and returns it.
-    // Returns null if the queue is empty.
-    pop() {
-        var item = peek()
-        if (item != null) {
-            _queue.removeAt(0)
-        }
-        return item
-    }
-
-    // Copies the elements of the queue to a list and returns it.
-    toList { _queue.toList }
-
-    // Copies the elements of the queue to a new Queue object and returns it.
-    copy() {
-        var q = Queue.new()
-        q.pushAll(_queue)
-        return q
-    }
-
-    // Iterator protocol methods.
-    iterate(iterator) { _queue.iterate(iterator) }
-    iteratorValue(iterator) { _queue.iteratorValue(iterator) }
-
-    // Returns the string representation of the queue's underlying list.
-    toString { _queue.toString }
-}
-
-/* Deque represents a doubled-ended queue. */
-class Deque is Sequence {
-     // Constructs a new empty deque.
-    construct new() { _deque = [] }
-
-    // Returns the number of elements in the deque.
-    count { _deque.count }
-
-    // Returns whether or not the deque is empty.
-    isEmpty { count == 0 }
-
-    // Removes all elements from the deque.
-    clear() { _deque.clear() }
-
-    // Returns the first item of the deque without removing it.
-    // Returns null if the deque is empty.
-    peekFront() { (!isEmpty) ? _deque[0] : null }
-
-    // Returns the last item of the deque without removing it.
-    // Returns null if the deque is empty.
-    peekBack() { (!isEmpty) ? _deque[-1] : null }
-
-    // Adds 'item' to the front of the deque and returns it.
-    pushFront(item) { _deque.insert(0, item) }
-
-    // Adds a sequence of 'items' (in order) to the front of the deque and returns them.
-    pushAllFront(items) {
-        if (!(items is Sequence)) Fiber.abort("Argument must be a Sequence.")
-        var i = 0
-        for (item in items) {
-            _deque.insert(i, item)
-            i = i + 1
-        }
-        return items
-    }
-
-    // Adds 'item' to the back of the deque and returns it.
-    pushBack(item) { _deque.add(item) }
-
-    // Adds a sequence of 'items' (in order) to the back of the deque and returns them.
-    pushAllBack(items) {
-        if (!(items is Sequence)) Fiber.abort("Argument must be a Sequence.")
-        return _deque.addAll(items)
-    }
-
-    // Removes the first item from the deque and returns it.
-    // Returns null if the deque is empty.
-    popFront() {
-        var item = peekFront()
-        if (item != null) {
-            _deque.removeAt(0)
-        }
-        return item
-    }
-
-    // Removes the last item from the deque and returns it.
-    // Returns null if the deque is empty.
-    popBack() {
-        var item = peekBack()
-        if (item != null) {
-            _deque.removeAt(-1)
-        }
-        return item
-    }
-
-    // Copies the elements of the deque to a list and returns it.
-    toList { _deque.toList }
-
-    // Copies the elements of the deque to a new Deque object and returns it.
-    copy() {
-        var d = Deque.new()
-        d.pushAllBack(_deque)
-        return d
-    }
-
-    // Iterator protocol methods.
-    iterate(iterator) { _deque.iterate(iterator) }
-    iteratorValue(iterator) { _deque.iteratorValue(iterator) }
-
-    // Returns the string representation of the deque's underlying list.
-    toString { _deque.toString }
-}
-
-
-/* PriorityQueue represents a queue in which each element has an associated priority
-   which can be any number. An element with a higher priority is 'popped'
-   before an element with a lower priority. Elements with the same priority
-   are popped in order of addition. Elements are stored as pairs viz: [value, priority]
-   and are sorted after each addition or group thereof in descending order of priority.
- */
+// Based on Python's heapq module.
+// https://github.com/python/cpython/blob/main/Lib/heapq.py
 class PriorityQueue is Sequence {
-    // Private static method which provides a comparison algorithm for the sort_ method.
-    static cmp_(e1, e2) { (e1[1] - e2[1]).sign }
+    static cmp_(e1, e2) { e1[1] <= e2[1] }
+    construct new() { _heap = [] }
 
-    // Private static method which sorts a list of elements 'a' by descending order
-    // of priority using the insertion sort algorithm.
-    static sort_(a) {
-        var c = a.count
-        if (c < 2) return
-        for (i in 1..c-1) {
-            var v = a[i]
-            var j = i - 1
-            while (j >= 0 && cmp_(a[j], v) > 0) {
-                a[j+1] = a[j]
-                j = j - 1
-            }
-            a[j+1] = v
-        }
+    push(value, priority) {
+        _heap.add([value, priority])
+        siftDown_(0, _heap.count - 1)
     }
 
-    // Constructs a new empty priority queue.
-    construct new() { _pqueue = [] }
-
-    // Returns the number of elements in the priority queue.
-    count { _pqueue.count }
-
-    // Returns whether or not the priority queue is empty.
-    isEmpty { count == 0 }
-
-    // Removes all elements from the priority queue.
-    clear() { _pqueue.clear() }
-
-    // Returns the first element of the priority queue without removing it.
-    // Returns null if the priority queue is empty.
-    peek() { (!isEmpty) ? _pqueue[0] : null }
-
-    // Adds 'value' with priority 'p' to the priority queue and returns it.
-    push(value, p) {
-        var e = [value, p]
-        _pqueue.add(e)
-        PriorityQueue.sort_(_pqueue)
-        return e
-    }
-
-    // Adds a non-empty sequence of [value, priority] pairs (in order)
-    // to the priority queue and returns them.
-    pushAll(pairs) {
-        if (!((pairs is Sequence) && pairs.count > 0 &&
-            pairs.take(1).toList[0].count == 2)) {
-            Fiber.abort("Argument must be a non-empty sequence of [value, priority] pairs.")
-        }
-        _pqueue.addAll(pairs)
-        PriorityQueue.sort_(_pqueue)
-        return pairs
-    }
-
-    // Removes the first element from the priority queue and returns it.
-    // Returns null if the priority queue is empty.
     pop() {
-        var e = peek()
-        if (e != null) {
-            _pqueue.removeAt(0)
+        var lastElem = _heap.removeAt(-1)
+        if (!_heap.isEmpty) {
+            var returnItem = _heap[0]
+            _heap[0] = lastElem
+            siftUp_(0)
+            return returnItem
         }
-        return e
+        return lastElem
     }
 
-    // Copies the elements of the priority queue to a list and returns it.
-    toList { _pqueue.toList }
-
-    // Returns a list of the values of each element in priority order.
-    values {
-        var v = []
-        for (e in _pqueue) v.add(e[0])
-        return v
+    siftDown_(startpos, pos) {
+        var newitem = _heap[pos]
+        while (pos > startpos) {
+            var parentpos = (pos - 1) >> 1
+            var parent = _heap[parentpos]
+            if (PriorityQueue.cmp_(newitem, parent)) {
+                _heap[pos] = parent
+                pos = parentpos
+                continue
+            }
+            break
+        }
+        _heap[pos] = newitem
     }
 
-    // Copies the elements of the priority queue to a new PriorityQueue object and returns it.
-    copy() {
-        var pq = PriorityQueue.new()
-        pq.pushAll(_pqueue)
-        return pq
+    siftUp_(pos) {
+        var endpos = _heap.count
+        var startpos = pos
+        var newitem = _heap[pos]
+        // Bubble up the smaller child until hitting a leaf.
+        var childpos = 2*pos + 1    // leftmost child position
+        while (childpos < endpos) {
+            // Set childpos to index of smaller child.
+            var rightpos = childpos + 1
+            if (rightpos < endpos && !PriorityQueue.cmp_(_heap[childpos], _heap[rightpos])) {
+                childpos = rightpos
+            }
+            // Move the smaller child up.
+            _heap[pos] = _heap[childpos]
+            pos = childpos
+            childpos = 2*pos + 1
+        }
+        // The leaf at pos is empty now. Put newitem there, and bubble it up
+        // to its final resting place (by sifting its parents down).
+        _heap[pos] = newitem
+        siftDown_(startpos, pos)
     }
-
-    // Iterator protocol methods.
-    iterate(iterator) { _pqueue.iterate(iterator) }
-    iteratorValue(iterator) { _pqueue.iteratorValue(iterator) }
-
-    // Returns the string representation of the priority queue's underlying list.
-    toString { _pqueue.toString }
 }

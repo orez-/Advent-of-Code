@@ -1,3 +1,4 @@
+import "os" for Process
 import "/queue" for PriorityQueue
 
 var A = 0
@@ -10,49 +11,68 @@ var Empty = 5
 var Cost = [1, 10, 100, 1000]
 var Display = ["A", "B", "C", "D", ".", "."]
 
+var Get = Fn.new {|list, idx|
+    if (list.count > idx) return list[idx]
+    return 4
+}
+
 class State {
-    construct new(hall, top, base, gscore) {
+    construct new(hall, rooms, gscore, depth) {
         _hall = hall
-        _top = top
-        _base = base
+        _rooms = rooms
         _gscore = gscore
+        _depth = depth
     }
 
-    construct initial() {
+    construct part1() {
         _hall = [Empty, Empty, Door, Empty, Door, Empty, Door, Empty, Door, Empty, Empty]
-        _top = [D, A, B, C]
-        _base = [B, A, D, C]
+        _rooms = [
+            [B, D],
+            [A, A],
+            [D, B],
+            [C, C],
+        ]
         _gscore = 0
+        _depth = 2
+    }
+
+    construct part2() {
+        _hall = [Empty, Empty, Door, Empty, Door, Empty, Door, Empty, Door, Empty, Empty]
+        _rooms = [
+            [B, D, D, D],
+            [A, B, C, A],
+            [D, A, B, B],
+            [C, C, A, C],
+        ]
+        _gscore = 0
+        _depth = 4
     }
 
     hall { _hall }
-    top { _top }
-    base { _base }
+    rooms { _rooms }
     gscore { _gscore }
     gscore=(new) { _gscore = new }
+    isReceptive(idx) { rooms[idx].count < _depth && rooms[idx].all {|e| e == idx} }
     toString {
-        var hall = _hall.map { |e| Display[e] }.join("")
-        var top = _top.map { |e| Display[e] }.toList
-        var topStr = "###%(top[0])#%(top[1])#%(top[2])#%(top[3])###"
-        var base = _base.map { |e| Display[e] }.toList
-        var baseStr = "  #%(base[0])#%(base[1])#%(base[2])#%(base[3])#"
-        return "\n#%(hall)#\n%(topStr)\n%(baseStr)\n"
+        var hallStr = _hall.map { |e| Display[e] }.join("")
+        hallStr = "#%(hallStr)#"
+        for (y in (_depth - 1)..0) {
+            var chrs = (0..3).map {|x| Display[Get.call(rooms[x], y)]}.toList
+            hallStr = "%(hallStr)\n  #%(chrs[0])#%(chrs[1])#%(chrs[2])#%(chrs[3])#"
+        }
+        return hallStr
     }
 
-    clone() { State.new(_hall[0..-1], _top[0..-1], _base[0..-1], _gscore) }
+    clone() { State.new(_hall[0..-1], rooms.map {|e| e[0..-1]}.toList, _gscore, _depth) }
 
-    isReceptive(idx) { isBaseReceptive(idx) || isTopReceptive(idx) }
-    isTopReceptive(idx) { base[idx] == idx && top[idx] == Empty }
-    isBaseReceptive(idx) { base[idx] == Empty }
-    // No list equality ಠ_ಠ
-    // isDone { top == [A, B, C, D] && base == [A, B, C, D] }
     isDone {
-        return top[0] == A && top[1] == B && top[2] == C && top[3] == D &&
-            base[0] == A && base[1] == B && base[2] == C && base[3] == D
+        return (0..3).all {|piece|
+            return rooms[piece].count == _depth && rooms[piece].all {|e| e == piece}
+        }
     }
 
     fscore { heuristic + _gscore }
-    hash { "%(_hall.join(""))%(_top.join(""))%(_base.join(""))" }
+    hash { toString }
     heuristic {
         var total = 0
         for (h in 0..10) {
@@ -61,12 +81,13 @@ class State {
                 total = total + ((h - goal).abs + 1) * Cost[hall[h]]
             }
         }
-        for (i in 0..3) {
-            if (base[i] != Empty && base[i] != i) {
-                total = total + ((base[i] - i).abs * 2 + 3) * Cost[base[i]]
-            }
-            if (top[i] != Empty && top[i] != i) {
-                total = total + ((top[i] - i).abs * 2 + 2) * Cost[top[i]]
+        for (x in 0..3) {
+            for (y in 0...rooms[x].count) {
+                var piece = rooms[x][y]
+                if (piece != x) {
+                    var steps = (piece - x).abs * 2 + (_depth + 1 - y)
+                    total = total + steps * Cost[piece]
+                }
             }
         }
         return total
@@ -76,35 +97,20 @@ class State {
         return Fiber.new {
             // We're either moving one of the stacks..
             for (i in 0..3) {
-                var top = this.top[i]
-                var base = this.base[i]
+                if (rooms[i].isEmpty) continue
+                if (rooms[i].all {|e| e == i}) continue
+                var steps = _depth + 1 - rooms[i].count
                 var lift = this.clone()
-                var steps
-                var piece
+                var piece = lift.rooms[i].removeAt(-1)
 
-                // Can lift top
-                if (top != Empty) {
-                    if (top != i || base != i) {
-                        piece = top
-                        lift.top[i] = Empty
-                        steps = 1
-                    } else continue
-                } else if (base != Empty && base != i) {
-                    piece = base
-                    lift.base[i] = Empty
-                    steps = 2
-                } else continue
                 // Place it in the hall UNLESS there's a direct route
                 // to the room.
                 var hallIdx = 2 + i * 2
                 var goalIdx = 2 + piece * 2
 
                 if (isReceptive(piece) && hall[hallIdx..goalIdx].all {|elem| elem == Empty || elem == Door}) {
-                    steps = steps + (hallIdx - goalIdx).abs + 1
-                    if (isBaseReceptive(piece)) {
-                        steps = steps + 1
-                        lift.base[piece] = piece
-                    } else lift.top[piece] = piece
+                    steps = steps + (hallIdx - goalIdx).abs + (_depth - rooms[piece].count)
+                    lift.rooms[piece].add(piece)
                     lift.gscore = lift.gscore + steps * Cost[piece]
                     Fiber.yield(lift)
                     continue
@@ -131,18 +137,11 @@ class State {
                         piece = hall[h]
                     }
                     if (h / 2 - 1 == piece) {
-                        if (isBaseReceptive(piece)) {
+                        if (isReceptive(piece)) {
                             var next = this.clone()
+                            var dist = (pieceIdx - h).abs + (_depth - rooms[piece].count)
                             next.hall[pieceIdx] = Empty
-                            next.base[piece] = piece
-                            var dist = (pieceIdx - h).abs + 2
-                            next.gscore = next.gscore + dist * Cost[piece]
-                            Fiber.yield(next)
-                        } else if (isTopReceptive(piece)) {
-                            var next = this.clone()
-                            next.hall[pieceIdx] = Empty
-                            next.top[piece] = piece
-                            var dist = (pieceIdx - h).abs + 1
+                            next.rooms[piece].add(piece)
                             next.gscore = next.gscore + dist * Cost[piece]
                             Fiber.yield(next)
                         }
@@ -155,9 +154,8 @@ class State {
     }
 }
 
-var findCost = Fn.new {
+var findCost = Fn.new {|state|
     var queue = PriorityQueue.new()
-    var state = State.initial()
     var seen = {state.hash: 1}
     queue.push(state, state.heuristic)
     while (true) {
@@ -178,4 +176,18 @@ var findCost = Fn.new {
     }
 }
 
-System.print(findCost.call())
+var main = Fn.new {
+    var arg = Process.arguments[0]
+    var initial
+    if (arg == "part1") {
+        initial = State.part1()
+    } else if (arg == "part2") {
+        initial = State.part2()
+    } else {
+        System.print("Please specify 'part1' or 'part2', not '%(arg)'")
+        return
+    }
+    System.print(findCost.call(initial))
+}
+
+main.call()
