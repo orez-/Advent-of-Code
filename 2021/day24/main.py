@@ -74,8 +74,13 @@ class Expr:
 
     def __matmul__(self, other):
         if self.max < other.min or other.max < self.min:
-            return IntExpr(0)
-        return EqExpr(self, other)
+            return [IntExpr(0)]
+        if self.min == self.max == other.min == other.max:
+            return [IntExpr(1)]
+        return [
+            AssumptionExpr(IntExpr(1), EqExpr(self, other)),
+            AssumptionExpr(IntExpr(0), NeqExpr(self, other)),
+        ]
 
     __rmatmul__ = __matmul__
 
@@ -91,6 +96,23 @@ class Expr:
         breakpoint()
 
 
+class AssumptionExpr(Expr):
+    def __init__(self, value, assumption):
+        self.value = value
+        self.assumption = assumption
+
+    @property
+    def min(self):
+        return self.value.min
+
+    @property
+    def max(self):
+        return self.value.max
+
+    def __repr__(self):
+        return f"[{self.value}]"
+
+
 class EqExpr(Expr):
     def __init__(self, a, b):
         self.a = a
@@ -100,7 +122,7 @@ class EqExpr(Expr):
 
     def __matmul__(self, other):
         if other == 0:
-            return NeqExpr(self.a, self.b)
+            return [NeqExpr(self.a, self.b)]
         return super().__matmul__(other)
 
     def __repr__(self):
@@ -119,7 +141,7 @@ class NeqExpr(Expr):
 
     def __matmul__(self, other):
         if other == 0:
-            return EqExpr(self.a, self.b)
+            return [EqExpr(self.a, self.b)]
         return super().__matmul__(other)
 
     def __repr__(self):
@@ -220,11 +242,6 @@ class IntExpr(Expr):
         if type(other) == IntExpr:
             return IntExpr(self.value % other.value)
         return super().__mod__(other)
-
-    def __matmul__(self, other):
-        if type(other) == IntExpr:
-            return IntExpr(int(self.value == other.value))
-        return super().__matmul__(other)
 
     def __add__(self, other):
         if type(other) == IntExpr:
@@ -370,6 +387,7 @@ class AddExpr(Expr):
 
 class Monad:
     def __init__(self):
+        self.constraints = []
         self.regs = {'w': IntExpr(0), 'x': IntExpr(0), 'y': IntExpr(0), 'z': IntExpr(0)}
         self.var = ord('a')
         self.vars = []
@@ -384,46 +402,75 @@ class Monad:
         self.regs[a] = Unit(chr(self.var))
         self.vars.append(chr(self.var))
         self.var += 1
+        return [self]
 
     def add(self, a, b):
         self.regs[a] += self.parse(b)
+        return [self]
 
     def mul(self, a, b):
         self.regs[a] *= self.parse(b)
+        return [self]
 
     def div(self, a, b):
         self.regs[a] //= self.parse(b)
+        return [self]
 
     def mod(self, a, b):
         self.regs[a] %= self.parse(b)
+        return [self]
 
     def eql(self, a, b):
-        self.regs[a] @= self.parse(b)
+        results = self.regs[a] @ self.parse(b)
+        answers = []
+        for result in results:
+            new = self.clone()
+            new.regs[a] = result
+            if type(result) == AssumptionExpr:
+                new.constraints.append(result.assumption)
+            answers.append(new)
+        return answers
+
+    def clone(self):
+        new = Monad()
+        new.regs = dict(self.regs)
+        new.constraints = list(self.constraints)
+        new.var = self.var
+        new.vars = self.vars[:]
+        return new
+
+    def __repr__(self):
+        results = []
+        for k in 'wxyz':
+            v = self.regs[k]
+            results.append(f"{k} [{v.min}..{v.max}]: {v.top_print()}")
+        return '\n'.join(results)
 
 
 import sys
 def main():
-    monad = Monad()
+    monads = [Monad()]
     stop = int(sys.argv[1]) if len(sys.argv) > 1 else float("inf")
     with open("file.txt", "r") as file:
         for i, line in list(enumerate(file)):
             cmd, *args = line.strip().split(" ")
             print(f"{i} [{line.strip()}]")
-            getattr(monad, cmd)(*args)
-            for k in 'wxyz':
-                v = monad.regs[k]
-                print(f"{k} [{v.min}..{v.max}]: {v.top_print()}")
+            new_monads = []
+            for monad in monads:
+                new_monads.extend(getattr(monad, cmd)(*args))
+            monads = new_monads
+            for monad in monads:
+                print(monad, end="\n\n")
             if i >= stop:
                 if input() == "?":
                     breakpoint()
             else:
                 print()
-        return
-        z = monad.regs['z']
-        possibilities = {(c, i) for c in monad.vars for i in range(1, 10)}
-        z.solve_for(possibilities, 0)
-        print()
-        for c in monad.vars:
-            print(f"{c} {[x for x in range(1, 10) if (c, x) in possibilities]}")
+
+        monads = [monad for monad in monads if monad.regs['z'].min <= 0]
+        print("Possibilities:")
+        for monad in monads:
+            print(f"Assuming {'; '.join(c.top_print() for c in monad.constraints)}")
+            print(monad)
 
 main()
