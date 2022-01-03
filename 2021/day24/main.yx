@@ -1,0 +1,477 @@
+import yoix.*.*;
+
+typedef Vec() {
+    Dictionary self = {
+        Array arr = new Array[10,...] {};
+        int length = 0;
+
+        growTo(int newLength) {
+            Array newArr = new Array[newLength,...] {};
+            int i;
+            for (i = 0; i < this.length; i++) {
+                newArr[i] = this.arr[i];
+            }
+            this.arr = newArr;
+        }
+
+        push(element) {
+            if ((arr @ length) == length) {
+                growTo(length * 2);
+            }
+            arr[this.length] = element;
+            this.length += 1;
+        }
+
+        extend(vec) {
+            int i;
+            for (i = 0; i < vec.length; i++) {
+                this.push(vec.arr[i]);
+            }
+        }
+
+        toString() {
+            String buf = "[";
+            int i = 0;
+            if (this.length != 0) { buf += toString(arr[i]); }
+            for (i = 1; i < this.length; i++) {
+                buf += ", " + toString(arr[i]);
+            }
+            return buf + "]";
+        }
+
+        clone() {
+            Vec result[] = new Vec[0];
+            result.growTo(this.arr @ length);
+            result.extend(this);
+            return result;
+        }
+    };
+    return self;
+}
+
+
+int INT_EXPR = 0;
+int UNIT = 1;
+int ADD_EXPR = 2;
+int MUL_EXPR = 3;
+int MOD_EXPR = 4;
+int DIV_EXPR = 5;
+int EQ_EXPR = 6;
+int NEQ_EXPR = 7;
+
+IntExpr(int value) {
+    Dictionary expr = {
+        int typeId = INT_EXPR;
+        int value = value;
+        int min = value;
+        int max = value;
+    };
+    return expr;
+}
+
+Unit(int var) {
+    Dictionary expr = {
+        int typeId = UNIT;
+        int var = var;
+        int min = 1;
+        int max = 9;
+    };
+    return expr;
+}
+
+AddExpr() {
+    Dictionary expr = {
+        int typeId = ADD_EXPR;
+        Vec terms[] = new Vec[0];
+        int constant = 0;
+        int min = 0;
+        int max = 0;
+    };
+    return expr;
+}
+
+MulExpr() {
+    Dictionary expr = {
+        int typeId = MUL_EXPR;
+        Vec terms[] = new Vec[0];
+        int constant = 1;
+        int min = 1;
+        int max = 1;
+    };
+    return expr;
+}
+
+ModExpr(left, right) {
+    Dictionary expr = {
+        int typeId = MOD_EXPR;
+        Dictionary left = left;
+        Dictionary right = right;
+        int min = 0;
+        int max = right.value - 1;
+    };
+    int num = right.value;
+    if (left.min / num == left.max / num) {
+        expr.min = left.min % num;
+        expr.max = left.max % num;
+    }
+    return expr;
+}
+
+DivExpr(left, right) {
+    Dictionary expr = {
+        int typeId = DIV_EXPR;
+        Dictionary left = left;
+        Dictionary right = right;
+        int min = left.min / right.value;
+        int max = left.max / right.value;
+    };
+    return expr;
+}
+
+EqExpr(left, right) {
+    Dictionary expr = {
+        int typeId = EQ_EXPR;
+        Dictionary left = left;
+        Dictionary right = right;
+    };
+    return expr;
+}
+
+NeqExpr(left, right) {
+    Dictionary expr = {
+        int typeId = NEQ_EXPR;
+        Dictionary left = left;
+        Dictionary right = right;
+    };
+    return expr;
+}
+
+
+equals(Dictionary exprA, int value) {
+    return exprA.min == value && exprA.max == value;
+}
+
+add(Dictionary exprA, Dictionary exprB) {
+    if (equals(exprA, 0)) { return exprB; }
+    if (equals(exprB, 0)) { return exprA; }
+    if (exprA.min == exprA.max && exprB.min == exprB.max) { return IntExpr(exprA.min + exprB.min); }
+
+    Dictionary expr = AddExpr();
+    addMut(expr, exprA);
+    addMut(expr, exprB);
+    return expr;
+}
+
+addMut(Dictionary expr, Dictionary exprA) {
+    if (exprA.min == exprA.max) {
+        expr.constant += exprA.min;
+        expr.min += exprA.min;
+        expr.max += exprA.max;
+    }
+    else if (exprA.typeId == ADD_EXPR) {
+        int i;
+        for (i = 0; i < exprA.terms.length; i++) {
+            expr.terms.push(exprA.terms.arr[i]);
+            expr.min += exprA.terms.arr[i].min;
+            expr.max += exprA.terms.arr[i].max;
+        }
+        expr.constant += exprA.constant;
+        expr.min += exprA.constant;
+        expr.max += exprA.constant;
+    }
+    else {
+        expr.terms.push(exprA);
+        expr.min += exprA.min;
+        expr.max += exprA.max;
+    }
+}
+
+mul(Dictionary exprA, Dictionary exprB) {
+    if (equals(exprA, 0) || equals(exprB, 0)) { return IntExpr(0); }
+    if (equals(exprA, 1)) { return exprB; }
+    if (equals(exprB, 1)) { return exprA; }
+    if (exprA.min == exprA.max && exprB.min == exprB.max) { return IntExpr(exprA.min * exprB.min); }
+    if (exprA.typeId == ADD_EXPR && exprB.typeId == INT_EXPR) {
+        Dictionary result = AddExpr();
+        int i;
+        for (i = 0; i < exprA.terms.length; i++) {
+            addMut(result, mul(exprA.terms.arr[i], exprB));
+        }
+        addMut(result, IntExpr(exprA.constant * exprB.value));
+        return result;
+    }
+
+    Dictionary expr = MulExpr();
+    mulMut(expr, exprA);
+    mulMut(expr, exprB);
+    return expr;
+}
+
+mulMut(Dictionary expr, Dictionary exprA) {
+    if (exprA.min == exprA.max) {
+        expr.constant *= exprA.min;
+        expr.min *= exprA.min;
+        expr.max *= exprA.max;
+    }
+    else if (exprA.typeId == MUL_EXPR) {
+        int i;
+        for (i = 0; i < exprA.terms.length; i++) {
+            expr.terms.push(exprA.terms.arr[i]);
+            expr.min *= exprA.terms.arr[i].min;
+            expr.max *= exprA.terms.arr[i].max;
+        }
+        expr.constant *= exprA.constant;
+    }
+    else {
+        expr.terms.push(exprA);
+        expr.min *= exprA.min;
+        expr.max *= exprA.max;
+    }
+}
+
+mod(Dictionary exprA, Dictionary exprB) {
+    if (exprA.max <= exprB.min) { return exprA; }
+    // TODO: constant?
+    if (exprA.typeId == ADD_EXPR) {
+        int num = exprB.value;
+        Dictionary result = IntExpr(exprA.constant % num);
+        int i;
+        for (i = 0; i < exprA.terms.length; i++) {
+            result = add(result, tryMod(exprA.terms.arr[i], num));
+        }
+        if (0 <= result.min && result.max < num) {
+            return result;
+        }
+        return ModExpr(result, exprB);
+    }
+    return ModExpr(exprA, exprB);
+}
+
+tryMod(Dictionary exprA, int num) {
+    if (exprA.typeId == MUL_EXPR && exprA.constant % num == 0) {
+        return IntExpr(0);
+    }
+    return exprA;
+}
+
+div(Dictionary exprA, Dictionary exprB) {
+    if (equals(exprB, 1)) { return exprA; }
+    if (exprA.typeId == ADD_EXPR) {
+        int num = exprB.value;
+        Dictionary divisible = IntExpr(0);
+        Dictionary notDivisible = IntExpr(0);
+        if (exprA.constant % num == 0) {
+            divisible = IntExpr(exprA.constant / num);
+        } else {
+            notDivisible = IntExpr(exprA.constant);
+        }
+        int i;
+        for (i = 0; i < exprA.terms.length; i++) {
+            Dictionary term = exprA.terms.arr[i];
+            Dictionary termdiv = tryDiv(term, num);
+            if (termdiv == null) {
+                notDivisible = add(notDivisible, term);
+            } else {
+                divisible = add(divisible, termdiv);
+            }
+        }
+        if (equals(notDivisible, 0)) {
+            return divisible;
+        }
+        Dictionary shot = tryDiv(notDivisible, num);
+        if (shot != null) {
+            return add(divisible, shot);
+        }
+        return add(divisible, DivExpr(notDivisible, exprB));
+    }
+    return DivExpr(exprA, exprB);
+}
+
+tryDiv(Dictionary exprA, int num) {
+    if (exprA.typeId == MUL_EXPR) {
+        if (exprA.constant == num && exprA.terms.length == 1) {
+            return exprA.terms.arr[0];
+        }
+        if (exprA.constant % num == 0) {
+            Dictionary e = MulExpr();
+            e.constant = exprA.constant / num;
+            e.terms = exprA.terms;
+            e.min = exprA.min / num;
+            e.max = exprA.max / num;
+            return e;
+        }
+    }
+    if (exprA.min / num == exprA.max / num) {
+        return IntExpr(exprA.min / num);
+    }
+    return null;
+}
+
+repr(Dictionary expr) {
+    switch (expr.typeId) {
+    case INT_EXPR:
+        return toString(expr.value);
+    case UNIT:
+        String buf = "-";
+        sprintf(buf, "%c", expr.var);
+        return buf;
+    case ADD_EXPR:
+        String buf = "(";
+        int i;
+        buf += repr(expr.terms.arr[0]);
+        for (i = 1; i < expr.terms.length; i++) {
+            buf += " + " + repr(expr.terms.arr[i]);
+        }
+        if (expr.constant != 0) { buf += " + " + toString(expr.constant); }
+        return buf + ")";
+    case MUL_EXPR:
+        String buf = "(";
+        int i;
+        buf += repr(expr.terms.arr[0]);
+        for (i = 1; i < expr.terms.length; i++) {
+            buf += " * " + repr(expr.terms.arr[i]);
+        }
+        if (expr.constant != 0) { buf += " * " + toString(expr.constant); }
+        return buf + ")";
+    case MOD_EXPR:
+        String buf = "(";
+        buf += repr(expr.left);
+        buf += " % ";
+        buf += repr(expr.right);
+        return buf + ")";
+    case DIV_EXPR:
+        String buf = "(";
+        buf += repr(expr.left);
+        buf += " / ";
+        buf += repr(expr.right);
+        return buf + ")";
+    case EQ_EXPR:
+        String buf = "(";
+        buf += repr(expr.left);
+        buf += " == ";
+        buf += repr(expr.right);
+        return buf + ")";
+    case NEQ_EXPR:
+        String buf = "(";
+        buf += repr(expr.left);
+        buf += " != ";
+        buf += repr(expr.right);
+        return buf + ")";
+    }
+    1 / 0;
+}
+
+Dictionary initialMonad = {
+    Vec constraints[] = new Vec[0];
+    Dictionary w = IntExpr(0);
+    Dictionary x = IntExpr(0);
+    Dictionary y = IntExpr(0);
+    Dictionary z = IntExpr(0);
+    int var = 'a';
+};
+
+parseRegister(Dictionary monad, String var) {
+    switch (var) {
+    case "w":
+    case "x":
+    case "y":
+    case "z":
+        return monad[var];
+    default:
+        return IntExpr(parseNumber(var));
+    }
+}
+
+clone(Dictionary monad) {
+    Dictionary result = {
+        Vec constraints[] = monad.constraints.clone();
+        Dictionary w = monad.w;
+        Dictionary x = monad.x;
+        Dictionary y = monad.y;
+        Dictionary z = monad.z;
+        int var = monad.var;
+    };
+    return result;
+}
+
+runCommand(Dictionary monad, Array command) {
+    Array results = {monad};
+    switch (command[0]) {
+    case "inp":
+        monad[command[1]] = Unit(monad.var);
+        monad.var += 1;
+        return results;
+    case "add":
+        monad[command[1]] = add(monad[command[1]], parseRegister(monad, command[2]));
+        return results;
+    case "mul":
+        monad[command[1]] = mul(monad[command[1]], parseRegister(monad, command[2]));
+        return results;
+    case "div":
+        monad[command[1]] = div(monad[command[1]], parseRegister(monad, command[2]));
+        return results;
+    case "mod":
+        monad[command[1]] = mod(monad[command[1]], parseRegister(monad, command[2]));
+        return results;
+    case "eql":
+        Dictionary left = monad[command[1]];
+        Dictionary right = parseRegister(monad, command[2]);
+        if (left.max < right.min || right.max < left.min) {
+            monad[command[1]] = IntExpr(0);
+            return results;
+        }
+        if (left.min == left.max && right.min == right.max && left.min == right.min) {
+            monad[command[1]] = IntExpr(1);
+            return results;
+        }
+
+        Dictionary eqMonad = clone(monad);
+        eqMonad[command[1]] = IntExpr(1);
+        eqMonad.constraints.push(EqExpr(left, right));
+
+        monad[command[1]] = IntExpr(0);
+        monad.constraints.push(NeqExpr(left, right));
+        Array results = {eqMonad, monad};
+        return results;
+    }
+    1 / 0;
+}
+
+Vec monads[] = new Vec[0];
+monads.push(initialMonad);
+
+int lineno = 0;
+while ((line = stdin.nextline)) {
+    Array command = strsplit(line, " ");
+    Vec newMonads[] = new Vec[0];
+    int i, j;
+    for (i = 0; i < monads.length; i++) {
+        Array out = runCommand(monads.arr[i], command);
+        for (j = 0; j < out @ length; j++) {
+            newMonads.push(out[j]);
+        }
+    }
+
+    monads = newMonads;
+    // printf("%d: %s\n", lineno, line);
+    // for (i = 0; i < monads.length; i++) {
+    //     printf("[%d..%d]\n", monads.arr[i].x.min, monads.arr[i].x.max);
+    //     printf("w: %s\n", repr(monads.arr[i].w));
+    //     printf("x: %s\n", repr(monads.arr[i].x));
+    //     printf("y: %s\n", repr(monads.arr[i].y));
+    //     printf("z: %s\n\n", repr(monads.arr[i].z));
+    // }
+    lineno += 1;
+}
+
+int i, j;
+Dictionary monad;
+for (i = 0; i < monads.length; i++) {
+    monad = monads.arr[i];
+    if (monad.z.min == 0) {
+        for (j = 0; j < monad.constraints.length; j++) {
+            stdout.nextline = repr(monad.constraints.arr[j]);
+        }
+        stdout.nextline = "";
+    }
+}
