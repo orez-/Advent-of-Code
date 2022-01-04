@@ -33,3 +33,4 @@ I could probably muddle through each of these with simple C-like code, but I wan
 | [Day 21: Dirac Dice](day21) ([?](https://adventofcode.com/2021/day/21)) | [Unicon](http://www.unicon.org/) |
 | [Day 22: Reactor Reboot](day22) ([?](https://adventofcode.com/2021/day/22)) | [Virgil](https://github.com/titzer/virgil) |
 | [Day 23: Amphipod](day23) ([?](https://adventofcode.com/2021/day/23)) | [Wren](https://wren.io/) |
+| [Day 24: Arithmetic Logic Unit](day24) ([?](https://adventofcode.com/2021/day/24)) | [Yoix](https://github.com/att/yoix) |

@@ -221,6 +221,8 @@ mulMut(Dictionary expr, Dictionary exprA) {
             expr.max *= exprA.terms.arr[i].max;
         }
         expr.constant *= exprA.constant;
+        expr.min *= exprA.constant;
+        expr.max *= exprA.constant;
     }
     else {
         expr.terms.push(exprA);
@@ -437,41 +439,112 @@ runCommand(Dictionary monad, Array command) {
     1 / 0;
 }
 
-Vec monads[] = new Vec[0];
-monads.push(initialMonad);
 
-int lineno = 0;
-while ((line = stdin.nextline)) {
-    Array command = strsplit(line, " ");
-    Vec newMonads[] = new Vec[0];
+main() {
+    Vec monads[] = new Vec[0];
+    monads.push(initialMonad);
+
+    int lineno = 0;
+    while ((line = stdin.nextline)) {
+        Array command = strsplit(line, " ");
+        Vec newMonads[] = new Vec[0];
+        int i, j;
+        for (i = 0; i < monads.length; i++) {
+            Array out = runCommand(monads.arr[i], command);
+            for (j = 0; j < out @ length; j++) {
+                newMonads.push(out[j]);
+            }
+        }
+
+        monads = newMonads;
+        // printf("%d: %s\n", lineno, line);
+        // for (i = 0; i < 1; i++) {
+        //     printf("[%d..%d]\n", monads.arr[i].x.min, monads.arr[i].x.max);
+        //     printf("w: %s\n", repr(monads.arr[i].w));
+        //     printf("x: %s\n", repr(monads.arr[i].x));
+        //     printf("y: %s\n", repr(monads.arr[i].y));
+        //     printf("z: %s\n\n", repr(monads.arr[i].z));
+        // }
+        lineno += 1;
+    }
+
+    Vec constraints[] = findConstraints(monads);
+    if (global.argv[1] === "part1") {
+        stdout.nextline = findLargest(constraints);
+    } else if (global.argv[1] === "part2") {
+        stdout.nextline = findSmallest(constraints);
+    } else {
+        printf("Please specify 'part1' or 'part2', not '%s'\n", global.argv[1]);
+    }
+}
+
+findConstraints(monads) {
     int i, j;
+    Dictionary monad;
     for (i = 0; i < monads.length; i++) {
-        Array out = runCommand(monads.arr[i], command);
-        for (j = 0; j < out @ length; j++) {
-            newMonads.push(out[j]);
+        monad = monads.arr[i];
+        if (monad.z.min == 0) {
+            // for (j = 0; j < monad.constraints.length; j++) {
+            //     stdout.nextline = repr(monad.constraints.arr[j]);
+            // }
+            // stdout.nextline = "";
+            return monad.constraints;
         }
     }
-
-    monads = newMonads;
-    // printf("%d: %s\n", lineno, line);
-    // for (i = 0; i < monads.length; i++) {
-    //     printf("[%d..%d]\n", monads.arr[i].x.min, monads.arr[i].x.max);
-    //     printf("w: %s\n", repr(monads.arr[i].w));
-    //     printf("x: %s\n", repr(monads.arr[i].x));
-    //     printf("y: %s\n", repr(monads.arr[i].y));
-    //     printf("z: %s\n\n", repr(monads.arr[i].z));
-    // }
-    lineno += 1;
 }
 
-int i, j;
-Dictionary monad;
-for (i = 0; i < monads.length; i++) {
-    monad = monads.arr[i];
-    if (monad.z.min == 0) {
-        for (j = 0; j < monad.constraints.length; j++) {
-            stdout.nextline = repr(monad.constraints.arr[j]);
+findLargest(constraints) {
+    Array answer = new Array [14,...] {};
+    Dictionary eq;
+    int i, n, left, right, offset, swap;
+    int a = 'a';
+    for (i = 0; i < constraints.length; i++) {
+        eq = constraints.arr[i];
+        left = eq.left.terms.arr[0].var;
+        offset = eq.left.constant;
+        right = eq.right.var;
+        if (left > right) {
+            offset = -offset;
+            swap = left;
+            left = right;
+            right = swap;
         }
-        stdout.nextline = "";
+        if (offset < 0) {
+            answer[left - a] = 9;
+            answer[right - a] = 9 + offset;
+        } else {
+            answer[left - a] = 9 - offset;
+            answer[right - a] = 9;
+        }
     }
+    return strjoin(answer, "");
 }
+
+findSmallest(constraints) {
+    Array answer = new Array [14,...] {};
+    Dictionary eq;
+    int i, n, left, right, offset, swap;
+    int a = 'a';
+    for (i = 0; i < constraints.length; i++) {
+        eq = constraints.arr[i];
+        left = eq.left.terms.arr[0].var;
+        offset = eq.left.constant;
+        right = eq.right.var;
+        if (left > right) {
+            offset = -offset;
+            swap = left;
+            left = right;
+            right = swap;
+        }
+        if (offset < 0) {
+            answer[left - a] = 1 - offset;
+            answer[right - a] = 1;
+        } else {
+            answer[left - a] = 1;
+            answer[right - a] = 1 + offset;
+        }
+    }
+    return strjoin(answer, "");
+}
+
+main();
