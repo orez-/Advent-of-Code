@@ -4,14 +4,8 @@ import Data.Fin
 import Data.List
 import Data.Maybe
 import Data.String
-import Result
-
-readLines : IO (List String)
-readLines = do
-  line <- getLine
-  if line == "" then pure [] else do
-    moreInputs <- readLines
-    pure (line :: moreInputs)
+import Aoc.Input
+import Aoc.Result
 
 findNumb : (List Char) -> (List (List Char)) -> Maybe Integer
 findNumb line nums =

@@ -2,14 +2,8 @@ module Main
 
 import Data.List
 import Data.Maybe
-import Result
-
-readLines : IO (List String)
-readLines = do
-  line <- getLine
-  if line == "" then pure [] else do
-    moreInputs <- readLines
-    pure (line :: moreInputs)
+import Aoc.Result
+import Aoc.Input
 
 findNum : String -> Result Int String
 findNum line =
