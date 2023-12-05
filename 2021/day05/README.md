@@ -38,7 +38,7 @@ In fact a lot of modern Emojicode is surprisingly practical.
   Now immutable is the default, and you need [extra symbols](https://www.emojicode.org/docs/reference/variables.html#declaring-and-assigning-mutable-variables) to declare (`🖍🆕`) and assign to (`🖍`) mutable variables, reinforcing the idea that immutability should be your default.
   I like it!
 - Object fields are always instance-private, which is enforced by syntax.
-  You can access instance fields unqualified when in scope, and call methods on an instance `🔝foo` but there's way to express `foo.top` or anything like that.
+  You can access instance fields unqualified when in scope, and call methods on an instance `🔝foo` but there's no way to express `foo.top` or anything like that.
 - The standard library is lightweight but contains most of the basics.
   It's got error handling, an optional type `🍬`, protocols, and even generics (eat your heart out, Go).
 - The documentation is comprehensive, clear, and searchable.
