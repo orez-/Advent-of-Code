@@ -1,6 +1,10 @@
 module Aoc.Input
 
 export
+println : Show a => a -> IO ()
+println x = putStrLn (show x)
+
+export
 readLines : IO (List String)
 readLines = do
   line <- getLine
