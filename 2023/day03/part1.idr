@@ -6,7 +6,6 @@ import Data.Maybe
 import Data.Nat
 import Data.String
 import Aoc.Input
-import Aoc.Result
 import Aoc.Util
 
 record PartNo where
