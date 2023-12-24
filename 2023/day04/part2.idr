@@ -26,7 +26,7 @@ cardScore line =
   let winners = intersection (parseNumbers winningNums) (parseNumbers myNums) in
   length winners
 
-increment : Nat -> Nat -> List Nat -> List Nat
+increment : Nat -> (n : Nat) -> (xs : List Nat) -> {auto 0 ok : InBounds n xs} -> List Nat
 increment by at counts =
   let val = index at counts in
   replaceAt at (val + by) counts
