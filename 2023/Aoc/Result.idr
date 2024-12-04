@@ -3,9 +3,9 @@ module Aoc.Result
 public export data Result t e = Ok t | Err e
 
 export
-okOr : Maybe t -> e -> Result t e
-okOr (Just x) _ = Ok x
-okOr Nothing e = Err e
+okOr : e -> Maybe t -> Result t e
+okOr _ (Just x) = Ok x
+okOr e Nothing = Err e
 
 export
 allOk : List (Result t e) -> Result (List t) e
