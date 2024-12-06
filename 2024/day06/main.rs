@@ -47,31 +47,32 @@ where
 fn part1(grid: Grid) -> usize {
     let start = find_start(&grid);
 
-    let mut seen = HashSet::new();
+    let mut stepped = HashSet::new();
     walk(start, &grid, |x, y, _, _| {
-        seen.insert((x, y));
+        stepped.insert((x, y));
         true
     });
-    seen.len()
+    stepped.len()
 }
 
 fn part2(mut grid: Grid) -> usize {
-    let width = grid[0].len();
-    let height = grid.len();
     let start = find_start(&grid);
+
+    let mut stepped = HashSet::new();
+    walk(start, &grid, |x, y, _, _| {
+        stepped.insert((x, y));
+        true
+    });
 
     let mut seen = HashSet::new();
     let mut total = 0;
-    for ox in 0..width {
-        for oy in 0..height {
-            if grid[oy][ox] != b'.' { continue }
-            grid[oy][ox] = b'#';
+    for (ox, oy) in stepped {
+        grid[oy][ox] = b'#';
 
-            seen.clear();
-            total += walk(start, &grid, |x, y, dx, dy| seen.insert((x, y, dx, dy))) as usize;
+        seen.clear();
+        total += walk(start, &grid, |x, y, dx, dy| seen.insert((x, y, dx, dy))) as usize;
 
-            grid[oy][ox] = b'.';
-        }
+        grid[oy][ox] = b'.';
     }
     total
 }
