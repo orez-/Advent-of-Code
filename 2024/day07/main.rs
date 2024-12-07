@@ -32,7 +32,7 @@ enum Operator {
     Concatenate,
 }
 
-fn could_num(agg: u64, nums: &[u64], ops: &[Operator], goal: u64) -> bool {
+fn could_solve(agg: u64, nums: &[u64], ops: &[Operator], goal: u64) -> bool {
     let Some((num, nums)) = nums.split_first() else { return agg == goal };
     ops.iter().any(|op| {
         let next = match op {
@@ -40,7 +40,7 @@ fn could_num(agg: u64, nums: &[u64], ops: &[Operator], goal: u64) -> bool {
             Operator::Multiply => agg * num,
             Operator::Concatenate => agg * 10_u64.pow(num.ilog10() + 1) + num,
         };
-        could_num(next, nums, ops, goal)
+        could_solve(next, nums, ops, goal)
     })
 }
 
@@ -49,7 +49,7 @@ fn part1(lines: Vec<Equation>) -> u64 {
     for (goal, nums) in lines {
         let (&agg, nums) = nums.split_first().unwrap();
         let ops = vec![Operator::Add, Operator::Multiply];
-        if could_num(agg, nums, &ops, goal) {
+        if could_solve(agg, nums, &ops, goal) {
             total += goal;
         }
     }
@@ -61,7 +61,7 @@ fn part2(lines: Vec<Equation>) -> u64 {
     for (goal, nums) in lines {
         let (&agg, nums) = nums.split_first().unwrap();
         let ops = vec![Operator::Add, Operator::Multiply, Operator::Concatenate];
-        if could_num(agg, nums, &ops, goal) {
+        if could_solve(agg, nums, &ops, goal) {
             total += goal;
         }
     }
