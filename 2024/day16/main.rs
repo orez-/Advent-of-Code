@@ -1,4 +1,4 @@
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::env;
 use std::io::{self, BufRead};
 
@@ -35,9 +35,75 @@ fn part1(game: Game) -> i32 {
     panic!("oh god we're trapped");
 }
 
-fn part2(game: Game) -> i32 {
-    let _ = game;
-    0
+fn part2(game: Game) -> usize {
+    let Game {
+        grid,
+        start: (sx, sy),
+        end: (ex, ey),
+    } = game;
+
+    // distance from start to all relevant cells
+    let mut start_to_dist = HashMap::new();
+    let mut best = None;
+    let mut frontier = BinaryHeap::from([(0, sx, sy, 1, 0)]);
+    while let Some((d, x, y, fx, fy)) = frontier.pop() {
+        // remaining paths are worse.
+        if best.is_some_and(|b| b != d) { break }
+
+        // `try_insert` is nightly-only as of 1.83
+        let key = (x, y, fx, fy);
+        if start_to_dist.contains_key(&key) { continue }
+        start_to_dist.insert(key, d);
+
+        if (x, y) == (ex, ey) {
+            best = Some(d);
+            continue;
+        }
+
+        for (nx, ny, dx, dy, cost) in [
+            (x.wrapping_add_signed(fx), y.wrapping_add_signed(fy), fx, fy, 1),
+            (x, y, -fy, fx, 1000),
+            (x, y, fy, -fx, 1000),
+        ] {
+            if grid[ny][nx] == b'#' || start_to_dist.contains_key(&(nx, ny, dx, dy)) { continue }
+            frontier.push((d - cost, nx, ny, dx, dy));
+        }
+    }
+
+    // distance from end to all relevant cells
+    let mut end_to_dist = HashMap::new();
+    let best = best.expect("oh god we're trapped");
+    let mut frontier = BinaryHeap::from([
+        (0, ex, ey, 1, 0),
+        (0, ex, ey, 0, 1),
+        (0, ex, ey, -1, 0),
+        (0, ex, ey, 0, -1),
+    ]);
+    while let Some((d, x, y, fx, fy)) = frontier.pop() {
+        // remaining paths are worse.
+        if best > d { break }
+
+        // `try_insert` is nightly-only as of 1.83
+        let key = (x, y, fx, fy);
+        if end_to_dist.contains_key(&key) { continue }
+        end_to_dist.insert(key, d);
+
+        for (nx, ny, dx, dy, cost) in [
+            (x.wrapping_add_signed(fx), y.wrapping_add_signed(fy), fx, fy, 1),
+            (x, y, -fy, fx, 1000),
+            (x, y, fy, -fx, 1000),
+        ] {
+            if grid[ny][nx] == b'#' || end_to_dist.contains_key(&(nx, ny, dx, dy)) { continue }
+            frontier.push((d - cost, nx, ny, dx, dy));
+        }
+    }
+
+    let happy_cells: HashSet<_> = end_to_dist.into_iter().filter_map(|((x, y, fx, fy), dist)| {
+        let rev_key = (x, y, -fx, -fy);
+        let start_dist = start_to_dist.get(&rev_key)?;
+        (start_dist + dist == best).then_some((x, y))
+    }).collect();
+    happy_cells.len()
 }
 
 fn read_lines() -> io::Result<Game> {
