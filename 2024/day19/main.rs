@@ -43,12 +43,21 @@ impl Trie {
         self.frames[frame_idx].0 = true;
     }
 
-    fn prefixes_of<'s, 'h>(&'s self, haystack: &'h str) -> impl Iterator<Item = usize> + use<'s, 'h> {
+    fn prefixes_of<'s, 'h>(
+        &'s self,
+        haystack: &'h str,
+    ) -> impl Iterator<Item = usize> + use<'s, 'h> {
         let mut frame_idx = 0;
-        haystack.chars().map(chr_to_index).map_while(move |next_idx| {
-            frame_idx = self.frames[frame_idx].1[next_idx];
-            (frame_idx != 0).then(|| self.frames[frame_idx].0)
-        }).zip(1..).filter(|&(keep, _)| keep).map(|(_, idx)| idx)
+        haystack
+            .chars()
+            .map(chr_to_index)
+            .map_while(move |next_idx| {
+                frame_idx = self.frames[frame_idx].1[next_idx];
+                (frame_idx != 0).then(|| self.frames[frame_idx].0)
+            })
+            .zip(1..)
+            .filter(|&(keep, _)| keep)
+            .map(|(_, idx)| idx)
     }
 }
 
