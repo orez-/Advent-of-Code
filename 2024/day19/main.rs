@@ -3,7 +3,7 @@ use std::env;
 use std::io::{self, BufRead};
 
 struct Input {
-    patterns: Vec<String>,
+    patterns: Trie,
     goals: Vec<String>,
 }
 
@@ -54,17 +54,13 @@ impl Trie {
 
 fn part1(input: Input) -> usize {
     let Input { patterns, goals } = input;
-    let mut pats = Trie::new();
-    for pat in &patterns {
-        pats.insert(pat);
-    }
 
     goals.iter().filter(|&goal| {
         let mut seen = HashSet::new();
         let mut frontier = VecDeque::from([goal.as_str()]);
         while let Some(goal) = frontier.pop_front() {
             if goal.is_empty() { return true }
-            for idx in pats.prefixes_of(goal) {
+            for idx in patterns.prefixes_of(goal) {
                 let slice = &goal[idx..];
                 if seen.insert(slice.len()) {
                     frontier.push_back(slice);
@@ -77,10 +73,6 @@ fn part1(input: Input) -> usize {
 
 fn part2(input: Input) -> usize {
     let Input { patterns, goals } = input;
-    let mut pats = Trie::new();
-    for pat in &patterns {
-        pats.insert(pat);
-    }
 
     goals.iter().map(|goal| {
         let mut seen = vec![0; goal.len() + 1];
@@ -88,7 +80,7 @@ fn part2(input: Input) -> usize {
         for from_idx in 0..goal.len() {
             let count = seen[from_idx];
             if count == 0 { continue }
-            for idx in pats.prefixes_of(&goal[from_idx..]) {
+            for idx in patterns.prefixes_of(&goal[from_idx..]) {
                 seen[from_idx..][idx] += count;
             }
         }
@@ -100,9 +92,14 @@ fn read_lines() -> io::Result<Input> {
     let stdin = io::stdin();
     let lines: Result<Vec<_>, _> = stdin.lock().lines().collect();
     let lines = lines?;
-    let [patterns, _, goals @ ..] = lines.as_slice() else { panic!() };
-    let patterns = patterns.split(", ").map(|x| x.to_owned()).collect();
+    let [pats, _, goals @ ..] = lines.as_slice() else { panic!() };
     let goals = goals.to_vec();
+
+    let mut patterns = Trie::new();
+    for pat in pats.split(", ") {
+        patterns.insert(pat);
+    }
+
     Ok(Input { patterns, goals })
 }
 
