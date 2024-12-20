@@ -11,8 +11,8 @@ struct Race {
     end: Coord,
 }
 
+// "been" is probably more accurately "distance_along_race". whatever.
 fn get_been(race: &Race) -> HashMap<Coord, usize> {
-   // build the `been` map
     let mut been = HashMap::new();
     let (mut x, mut y) = race.start;
     let mut distance = 0usize;
@@ -34,26 +34,23 @@ fn get_been(race: &Race) -> HashMap<Coord, usize> {
 }
 
 fn part1(race: Race) -> u64 {
+    let interesting_cheat_benefit = 100;
+
     let been = get_been(&race);
 
     // count good cheats
-    let width = race.grid[0].len();
-    let height = race.grid.len();
     let mut count = 0;
-    for y in 1..width {
-        for x in 1..height {
-            if race.grid[y][x] == b'#' { continue }
-            if x + 2 < width && &[race.grid[y][x+1], race.grid[y][x+2]] == b"#." {
-                let cheat_benefit = been[&(x, y)].abs_diff(been[&(x+2, y)]) - 2;
-                if cheat_benefit >= 100 {
-                    count += 1;
-                }
+    for (&(x, y), d0) in &been {
+        if let Some(d1) = been.get(&(x + 2, y)) {
+            let cheat_benefit = d0.abs_diff(*d1) - 2;
+            if cheat_benefit >= interesting_cheat_benefit {
+                count += 1;
             }
-            if y + 2 < height && &[race.grid[y+1][x], race.grid[y+2][x]] == b"#." {
-                let cheat_benefit = been[&(x, y)].abs_diff(been[&(x, y+2)]) - 2;
-                if cheat_benefit >= 100 {
-                    count += 1;
-                }
+        }
+        if let Some(d1) = been.get(&(x, y + 2)) {
+            let cheat_benefit = d0.abs_diff(*d1) - 2;
+            if cheat_benefit >= interesting_cheat_benefit {
+                count += 1;
             }
         }
     }
