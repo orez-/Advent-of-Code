@@ -40,7 +40,7 @@ pub(super) fn replay_commands(s3: &str) {
 }
 
 impl DirPad {
-    fn to_chr(&self) -> char {
+    fn to_chr(self) -> char {
         match self {
             DirPad::Up => '^',
             DirPad::Right => '>',

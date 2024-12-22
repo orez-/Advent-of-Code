@@ -1,8 +1,7 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashMap;
 use std::env;
 use std::io::{self, BufRead};
 use std::iter::{once, repeat_n};
-use crate::debug::*;
 
 mod debug;
 
@@ -44,97 +43,97 @@ fn dirpad_coord(dirpad: DirPad) -> Coord {
     }
 }
 
-fn move_to(pos: &mut Coord, to: Coord) -> Vec<DirPad> {
-    let from = *pos;
-    *pos = to;
-
+fn paths_to(from: Coord, to: Coord, no_touchie: Coord) -> Vec<Vec<DirPad>> {
     let left = repeat_n(DirPad::Left, from.0.saturating_sub(to.0) as _);
     let right = repeat_n(DirPad::Right, to.0.saturating_sub(from.0) as _);
     let up = repeat_n(DirPad::Up, from.1.saturating_sub(to.1) as _);
     let down = repeat_n(DirPad::Down, to.1.saturating_sub(from.1) as _);
     let press = once(DirPad::A);
 
-    if from.0 == 0 {
-        // prefer horiz, then vertical
-        left.chain(right).chain(up).chain(down).chain(press).collect()
-    } else {
-        // prefer vertical, then horiz
-        up.chain(down).chain(left).chain(right).chain(press).collect()
+    let mut paths = Vec::new();
+    // prefer horiz, then vertical
+    if !(from.1 == no_touchie.1 && to.0 == no_touchie.0) {
+        paths.push(
+            left.clone()
+                .chain(right.clone())
+                .chain(up.clone())
+                .chain(down.clone())
+                .chain(press.clone())
+                .collect()
+        );
     }
+    // prefer vertical, then horiz
+    if !(from.0 == no_touchie.0 && to.1 == no_touchie.1) {
+        paths.push(
+            up.chain(down).chain(left).chain(right).chain(press).collect()
+        );
+    }
+    paths
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-struct State<'g, const N: usize> {
-    goal: &'g str,
-    numpad0: Coord,
-    dirpads: [Coord; N],
+type Cache = HashMap<(Coord, Coord, usize), usize>;
+
+fn solve_dirpad(cache: &mut Cache, from: Coord, to: Coord, depth: usize) -> usize {
+    if depth == 0 { return 1 }
+
+    let key = (from, to, depth);
+    if let Some(&ans) = cache.get(&key) { return ans }
+
+    let ans = paths_to(from, to, (0, 0)).into_iter().map(|path| {
+        let mut dir_prev = dirpad_coord(DirPad::A);
+        let mut score = 0;
+        for dir in path {
+            let dir_cur = dirpad_coord(dir);
+            score += solve_dirpad(cache, dir_prev, dir_cur, depth - 1);
+            dir_prev = dir_cur;
+        }
+        score
+    }).min().unwrap();
+
+    cache.insert(key, ans);
+    ans
 }
 
-fn in_dirbounds((x, y): Coord) -> bool {
-    !(x > 2 || y > 1 || (x, y) == (0, 0))
+fn solve_numpad(cache: &mut Cache, from: Coord, to: Coord, depth: usize) -> usize {
+    let key = (from, to, depth + 1);
+    if let Some(&ans) = cache.get(&key) { return ans }
+
+    let ans = paths_to(from, to, (0, 3)).into_iter().map(|path| {
+        let mut dir_prev = dirpad_coord(DirPad::A);
+        let mut score = 0;
+        for dir in path {
+            let dir_cur = dirpad_coord(dir);
+            score += solve_dirpad(cache, dir_prev, dir_cur, depth);
+            dir_prev = dir_cur;
+        }
+        score
+    }).min().unwrap();
+
+    cache.insert(key, ans);
+    ans
 }
 
-fn in_numbounds((x, y): Coord) -> bool {
-    !(x > 2 || y > 3 || (x, y) == (0, 3))
-}
-
-fn run<const N: usize>(lines: Vec<String>) -> usize {
+fn solve(lines: Vec<String>, depth: usize) -> usize {
+    let mut cache = HashMap::new();
     lines.iter().map(|line| {
         let mut score = 0;
-        let init = State {
-            goal: line,
-            dirpads: [dirpad_coord(DirPad::A); N],
-            numpad0: numpad_coord('A'),
-        };
-        let mut seen = HashSet::from([init.clone()]);
-        let mut frontier = VecDeque::from([(0, init)]);
-        while let Some((steps, state)) = frontier.pop_front() {
-            if state.goal.is_empty() {
-                score = steps;
-                break;
-            }
-            for mut dir in [DirPad::Up, DirPad::Right, DirPad::Down, DirPad::Left, DirPad::A] {
-                let mut state = state.clone();
-                'once: loop {
-                    'press: loop {
-                        for dirpad in &mut state.dirpads {
-                            let press = step_pad(dirpad, dir);
-                            if !in_dirbounds(*dirpad) { break 'once }
-                            if !press { break 'press }
-                            dir = coord_to_dirpad(*dirpad);
-                        }
-                        let press = step_pad(&mut state.numpad0, dir);
-                        if !in_numbounds(state.numpad0) { break 'once }
-                        if !press { break 'press }
-
-                        // numpad press
-                        let mut chrs = state.goal.chars();
-                        let exp = chrs.next().unwrap();
-                        state.goal = chrs.as_str();
-                        if coord_to_numpad(state.numpad0) != exp { break 'once }
-                        break;
-                    }
-
-                    // progress
-                    if seen.insert(state.clone()) {
-                        frontier.push_back((steps + 1, state));
-                    }
-                    break;
-                }
-            }
+        let mut from = numpad_coord('A');
+        for chr in line.chars() {
+            let to = numpad_coord(chr);
+            score += solve_numpad(&mut cache, from, to, depth);
+            from = to;
         }
-
         let num: usize = line[..3].parse().unwrap();
         num * score
     }).sum()
 }
 
 fn part1(lines: Vec<String>) -> usize {
-    run::<2>(lines)
+    solve(lines, 2)
 }
 
 fn part2(lines: Vec<String>) -> usize {
-    run::<25>(lines)
+    solve(lines, 25)
 }
 
 fn read_lines() -> io::Result<Vec<String>> {
