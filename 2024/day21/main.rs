@@ -64,11 +64,10 @@ fn move_to(pos: &mut Coord, to: Coord) -> Vec<DirPad> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-struct State<'g> {
+struct State<'g, const N: usize> {
     goal: &'g str,
     numpad0: Coord,
-    dirpad1: Coord,
-    dirpad2: Coord,
+    dirpads: [Coord; N],
 }
 
 fn in_dirbounds((x, y): Coord) -> bool {
@@ -79,14 +78,13 @@ fn in_numbounds((x, y): Coord) -> bool {
     !(x > 2 || y > 3 || (x, y) == (0, 3))
 }
 
-fn part1(lines: Vec<String>) -> usize {
+fn run<const N: usize>(lines: Vec<String>) -> usize {
     lines.iter().map(|line| {
         let mut score = 0;
         let init = State {
             goal: line,
+            dirpads: [dirpad_coord(DirPad::A); N],
             numpad0: numpad_coord('A'),
-            dirpad1: dirpad_coord(DirPad::A),
-            dirpad2: dirpad_coord(DirPad::A),
         };
         let mut seen = HashSet::from([init.clone()]);
         let mut frontier = VecDeque::from([(0, init)]);
@@ -95,30 +93,34 @@ fn part1(lines: Vec<String>) -> usize {
                 score = steps;
                 break;
             }
-            for dir in [DirPad::Up, DirPad::Right, DirPad::Down, DirPad::Left, DirPad::A] {
+            for mut dir in [DirPad::Up, DirPad::Right, DirPad::Down, DirPad::Left, DirPad::A] {
                 let mut state = state.clone();
-                let press = step_pad(&mut state.dirpad2, dir);
-                if !in_dirbounds(state.dirpad2) { continue }
-                if press {
-                    let dir = coord_to_dirpad(state.dirpad2);
-                    let press = step_pad(&mut state.dirpad1, dir);
-                    if !in_dirbounds(state.dirpad1) { continue }
-                    if press {
-                        let dir = coord_to_dirpad(state.dirpad1);
-                        let press = step_pad(&mut state.numpad0, dir);
-                        if !in_numbounds(state.numpad0) { continue }
-                        if press {
-                            let mut chrs = state.goal.chars();
-                            let exp = chrs.next().unwrap();
-                            state.goal = chrs.as_str();
-                            if coord_to_numpad(state.numpad0) != exp {
-                                continue
-                            }
+                'once: loop {
+                    'press: loop {
+                        for dirpad in &mut state.dirpads {
+                            let press = step_pad(dirpad, dir);
+                            if !in_dirbounds(*dirpad) { break 'once }
+                            if !press { break 'press }
+                            dir = coord_to_dirpad(*dirpad);
                         }
+                        let press = step_pad(&mut state.numpad0, dir);
+                        if !in_numbounds(state.numpad0) { break 'once }
+                        if !press { break 'press }
+
+                        // numpad press
+                        let mut chrs = state.goal.chars();
+                        let exp = chrs.next().unwrap();
+                        state.goal = chrs.as_str();
+                        if coord_to_numpad(state.numpad0) != exp { break 'once }
+                        break;
                     }
+
+                    // progress
+                    if seen.insert(state.clone()) {
+                        frontier.push_back((steps + 1, state));
+                    }
+                    break;
                 }
-                if !seen.insert(state.clone()) { continue }
-                frontier.push_back((steps + 1, state));
             }
         }
 
@@ -127,9 +129,12 @@ fn part1(lines: Vec<String>) -> usize {
     }).sum()
 }
 
-fn part2(lines: Vec<String>) -> i32 {
-    let _ = lines;
-    0
+fn part1(lines: Vec<String>) -> usize {
+    run::<2>(lines)
+}
+
+fn part2(lines: Vec<String>) -> usize {
+    run::<25>(lines)
 }
 
 fn read_lines() -> io::Result<Vec<String>> {
