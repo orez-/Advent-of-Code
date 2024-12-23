@@ -6,7 +6,7 @@ use std::io::{self, BufRead};
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq)]
 struct Ip([u8; 2]);
 
-impl fmt::Debug for Ip {
+impl fmt::Display for Ip {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", std::str::from_utf8(&self.0).unwrap())
     }
@@ -44,8 +44,11 @@ fn find_pentagram(
     required: &mut IpSet,
     potential: &IpSet,
     checked: Ip,
-) -> usize {
-    let mut best = 0;
+    best: &mut IpSet,
+) {
+    if required.len() > best.len() {
+        *best = required.clone();
+    }
     for &node in potential.range(checked..).skip_while(|&&c| c == checked) {
         let nexts = &links[&node];
         // can't fit in
@@ -56,24 +59,24 @@ fn find_pentagram(
         let mut potential = potential & nexts;
         potential.remove(&node);
 
-        let maybe = find_pentagram(links, required, &potential, node) + 1;
+        find_pentagram(links, required, &potential, node, best);
 
         required.remove(&node);
-        best = best.max(maybe);
     }
-    best
 }
 
-fn part2(lines: Vec<(Ip, Ip)>) -> usize {
+fn part2(lines: Vec<(Ip, Ip)>) -> String {
     let mut links: Links = Links::new();
     for (a, b) in lines {
         links.entry(a).or_default().extend([a, b]);
         links.entry(b).or_default().extend([a, b]);
     }
 
+    let mut best = IpSet::new();
     let mut required = IpSet::new();
     let potential: IpSet = links.keys().copied().collect();
-    find_pentagram(&links, &mut required, &potential, Ip(*b"@@"))
+    find_pentagram(&links, &mut required, &potential, Ip(*b"@@"), &mut best);
+    best.into_iter().map(|ip| ip.to_string()).collect::<Vec<_>>().join(",")
 }
 
 fn read_lines() -> io::Result<Vec<(Ip, Ip)>> {
