@@ -23,7 +23,21 @@ struct Equation {
     out: Gate,
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq)]
+impl Equation {
+    fn sort(self) -> Self {
+        if self.left < self.right {
+            return self
+        }
+        Equation {
+            left: self.right,
+            op: self.op,
+            right: self.left,
+            out: self.out,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
 enum BinOp {
     And,
     Or,
@@ -71,9 +85,105 @@ fn part1(input: Input) -> u64 {
     vars.iter().rev().filter(|(k, _)| k.0[0] == b'z').fold(0, |a, (_, &b)| (a << 1) | (b as u64))
 }
 
-fn part2(input: Input) -> i32 {
-    let _ = input;
-    0
+fn print_eqn(var: Gate, eqns: &BTreeMap<Gate, Equation>) -> String {
+    let Some(eqn) = eqns.get(&var) else { return var.to_string() };
+    let left = print_eqn(eqn.left, eqns);
+    let right = print_eqn(eqn.right, eqns);
+    if left < right {
+        format!("({left} {} {right})", eqn.op)
+    } else {
+        format!("({right} {} {left})", eqn.op)
+    }
+}
+
+#[derive(Default)]
+struct Digits {
+    z: Option<Gate>,
+    dig: Option<Gate>,
+    carry: Option<Gate>,
+    pre: Option<Gate>,
+    xiyi: Option<Gate>,
+}
+
+impl Digits {
+    fn to_row(&self) -> String {
+        let to_str = |g: Option<Gate>| g.map_or("-".to_string(), |g| g.to_string());
+        format!("{}\t{}\t{}\t{}\t{}", to_str(self.z), to_str(self.dig), to_str(self.carry), to_str(self.pre), to_str(self.xiyi))
+    }
+}
+
+fn part2(mut input: Input) -> String {
+    let gate = |s: &str| s.try_into().unwrap();
+    let x_gate = |idx: usize| gate(format!("x{idx:<02}").as_str());
+    let y_gate = |idx: usize| gate(format!("y{idx:<02}").as_str());
+    // let z_gate = |idx: usize| format!("z{idx:<02}").as_str().try_into().unwrap();
+
+    let mut swap = |a, b| {
+        let a = gate(a);
+        let b = gate(b);
+        let adx = input.equations.iter().position(|e| e.out == a).unwrap();
+        let bdx = input.equations.iter().position(|e| e.out == b).unwrap();
+        input.equations[adx].out = b;
+        input.equations[bdx].out = a;
+    };
+    swap("fkb", "z16");
+    swap("rqf", "nnr");
+    swap("z31", "rdn");
+    swap("z37", "rrn");
+
+    let eqn_lookup: BTreeMap<_, _> = input
+        .equations
+        .into_iter()
+        .map(|eqn| eqn.sort())
+        .map(|eqn| ((eqn.left, eqn.op, eqn.right), eqn))
+        .collect();
+
+    let dig = eqn_lookup[&(x_gate(0), BinOp::Xor, y_gate(0))];
+    let digits = Digits {
+        z: Some(dig.out),
+        dig: Some(dig.out),
+        carry: None,
+        ..Default::default()
+    };
+    println!("i\tzᵢ\tdigᵢ\tcarryᵢ\tpreᵢ\txᵢ&yᵢ");
+    println!(" 0\t{}", digits.to_row());
+    let mut addition_eqns = vec![digits];
+
+    let lookup = |a, op, b| {
+        let mut args = [a?, b?];
+        args.sort_unstable();
+        let [arg_a, arg_b] = args;
+        Some(eqn_lookup.get(&(arg_a, op, arg_b))?.out)
+    };
+
+    // 45 but eh.
+    for i in 1..=44 {
+        let dig = eqn_lookup[&(x_gate(i), BinOp::Xor, y_gate(i))].out;
+        let xiyi = eqn_lookup[&(x_gate(i - 1), BinOp::And, y_gate(i - 1))].out;
+        let last = addition_eqns.last().unwrap();
+        let pre = lookup(last.dig, BinOp::And, last.carry);
+        let carry = if i == 1 { Some(xiyi) }
+            else { lookup(Some(xiyi), BinOp::Or, pre) };
+        let digits = Digits {
+            z: lookup(Some(dig), BinOp::Xor, carry),
+            dig: Some(dig),
+            xiyi: Some(xiyi),
+            pre,
+            carry,
+            ..Default::default()
+        };
+        println!("{i:>2}\t{}", digits.to_row());
+        addition_eqns.push(digits);
+    }
+
+    let mut swaps = vec![
+        "fkb", "z16",
+        "rqf", "nnr",
+        "z31", "rdn",
+        "z37", "rrn",
+    ];
+    swaps.sort();
+    swaps.join(",")
 }
 
 fn read_lines() -> io::Result<Input> {
