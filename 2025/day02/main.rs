@@ -3,10 +3,6 @@ use std::io::{self, BufRead};
 
 type Range = (String, String);
 
-fn div_ceil(a: usize, b: usize) -> usize {
-    (a + b - 1) / b
-}
-
 fn part1(ranges: Vec<Range>) -> u64 {
     let mut total = 0;
     for (mut start, end) in ranges {
@@ -16,7 +12,7 @@ fn part1(ranges: Vec<Range>) -> u64 {
             start = "10".to_string();
         }
         let start_half: u64 = start[..start.len() / 2].parse().unwrap();
-        let end_half: u64 = end[..div_ceil(end.len(), 2)].parse().unwrap();
+        let end_half: u64 = end[..end.len().div_ceil(2)].parse().unwrap();
         for num in start_half..=end_half {
             let num_str = num.to_string().repeat(2);
             let num = num_str.parse().unwrap();
@@ -40,7 +36,7 @@ fn sum_repeats(start: String, end: String) -> u64 {
     let mut total = 0;
     let s_num: u64 = start.parse().unwrap();
     let e_num: u64 = end.parse().unwrap();
-    let top = div_ceil(end.len(), 2);
+    let top = end.len().div_ceil(2);
     for len in 1..=top {
         let start_half: u64 = start[..len].parse().unwrap();
         let end_half: u64 = end[..len].parse().unwrap();
